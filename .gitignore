@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data - archivos pesados (solo subir data/barras/)
+DATA_2015/
+DATA_2016/
+DATA_2017/
+DATA_2018/
+DATA_2019/
+DATA_2020/
+DATA_2021/
+DATA_2022/
+DATA_2023/
+DATA_2024/
+DATA_2025/
+data/raw/
+data/polpaico/
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
+notebooks/
+
+# Cache
+.bar_index.pkl
+*.pkl
+
+# Backups
+*.backup
+
+# Environment
+.env
+.env.local
+
+# Bundled libraries (use requirements.txt instead)
+lib/
+
+# Gemini artifacts
+.gemini/

@@ -1,0 +1,593 @@
+================================================================================
+   DOCUMENTACIÓN DE ORGANIZACIÓN DE DATOS - PROYECTO CMARG
+   Dashboard de Costos Marginales de Energía Eléctrica Chile
+================================================================================
+
+Fecha: Marzo 2026
+Autor: Equipo CMARG
+
+================================================================================
+1. ESTRUCTURA GENERAL DEL DIRECTORIO data/
+================================================================================
+
+CMARG/
+└── data/
+    ├── raw/                     ← Datos crudos descargados del CEN
+    ├── barras/                  ← Datos procesados por subestación
+    ├── polpaico/                ← Datos históricos de Polpaico
+    ├── exogenous/               ← Datos exógenos (económicos y climáticos)
+    ├── prediction_arima_losvilos.csv
+    ├── prediction_prophet_losvilos.csv
+    └── prediction_xgboost_losvilos.csv
+
+
+================================================================================
+2. DATOS CRUDOS DEL COORDINADOR ELÉCTRICO NACIONAL (CEN)
+   Directorio: data/raw/
+================================================================================
+
+FUENTE: Coordinador Eléctrico Nacional de Chile (CEN)
+URL: https://www.coordinador.cl/
+ENDPOINT API: https://sipub.coordinador.cl/api/v1/recursos/costoMarBar
+
+Los datos del CEN corresponden a los COSTOS MARGINALES POR BARRA del Sistema
+Eléctrico Nacional (SEN) de Chile.
+
+2.1 FORMATO DE ARCHIVOS RAW
+----------------------------
+- Formato: TSV (Tab-Separated Values / Valores separados por tabulación)
+- Encoding: UTF-8 con retorno de carro Windows (\r\n)
+- Separador decimal: COMA (,) — formato europeo/latino
+  Ejemplo: 164,3 en vez de 164.3
+- Organización: Un archivo por mes
+- Nomenclatura: {año}-{mes}.tsv
+  Ejemplos: 2023-1.tsv, 2023-2.tsv, ..., 2023-12.tsv
+
+2.2 COLUMNAS DEL ARCHIVO TSV RAW (7 columnas)
+----------------------------------------------
+┌─────────────────────────────────┬────────────────────────────────────────┐
+│ COLUMNA                         │ DESCRIPCIÓN                            │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ barra_mnemotecnico              │ Código mnemotécnico de la barra        │
+│                                 │ (punto de conexión eléctrica).         │
+│                                 │ Es un identificador único del CEN.     │
+│                                 │ Ejemplo: BA01G0010SE006G0010           │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ barra_referencia_mnemotecnico   │ Código mnemotécnico de la barra de     │
+│                                 │ referencia usada para el cálculo.      │
+│                                 │ Ejemplo: BA02T0002SE032T0002           │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ fecha                           │ Fecha en formato ISO: YYYY-MM-DD       │
+│                                 │ Ejemplo: 2023-01-01                    │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ hora                            │ Hora del día (1 a 24).                 │
+│                                 │ Hora 1 = 00:00-01:00                   │
+│                                 │ Hora 24 = 23:00-00:00                  │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ costo_en_dolares                │ Costo marginal en USD/MWh.             │
+│                                 │ Separador decimal: COMA                │
+│                                 │ Ejemplo: 164,3                         │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ costo_en_pesos                  │ Costo marginal en CLP/MWh (pesos).    │
+│                                 │ Separador decimal: COMA                │
+│                                 │ Ejemplo: 141,21749                     │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ nombre                          │ Nombre legible de la barra/subestación │
+│                                 │ Incluye voltaje y punto de barra.      │
+│                                 │ Ejemplo: BA S/E CENTRAL QUELTEHUES     │
+│                                 │          110KV BP1                     │
+└─────────────────────────────────┴────────────────────────────────────────┘
+
+2.3 TAMAÑO DE LOS DATOS RAW
+----------------------------
+Cada archivo mensual contiene TODAS las barras del sistema eléctrico chileno
+(más de 1,400 barras) con 24 registros por día (uno por hora).
+
+Tamaño promedio por archivo mensual: ~75-85 MB
+Total archivos disponibles: 12 (año 2023 completo)
+Total aproximado: ~950 MB de datos raw
+
+Líneas por archivo: ~800,000+
+
+
+================================================================================
+3. DATOS PROCESADOS POR SUBESTACIÓN (BARRAS)
+   Directorio: data/barras/
+================================================================================
+
+Estos archivos son el resultado del procesamiento de los datos raw.
+Se filtran las barras de interés y se limpian los datos.
+
+3.1 FORMATO
+-----------
+- Formato: CSV (Comma-Separated Values)
+- Separador: COMA (,)
+- Separador decimal: PUNTO (.) — ya convertido al formato estándar
+- Un archivo por subestación de interés
+
+3.2 ARCHIVOS DISPONIBLES (11 subestaciones + consolidado)
+---------------------------------------------------------
+┌──────────────────────────┬───────────┬──────────────────────────────────┐
+│ ARCHIVO                  │ TAMAÑO    │ SUBESTACIÓN                      │
+├──────────────────────────┼───────────┼──────────────────────────────────┤
+│ all_barras.csv           │ 40.5 MB   │ Consolidado de todas las barras  │
+│ alto_jahuel_500.csv      │ 4.3 MB    │ Alto Jahuel 500kV                │
+│ cardones_500.csv         │ 4.5 MB    │ Cardones 500kV                   │
+│ charrua_500.csv          │ 4.2 MB    │ Charrúa 500kV                    │
+│ crucero_220.csv          │ 4.1 MB    │ Crucero 220kV                    │
+│ diego_almagro_220.csv    │ 4.7 MB    │ Diego de Almagro 220kV           │
+│ encuentro_220.csv        │ 4.2 MB    │ Encuentro 220kV                  │
+│ los_vilos_220.csv        │ 4.2 MB    │ Los Vilos 220kV                  │
+│ pan_azucar_500.csv       │ 1.2 MB    │ Pan de Azúcar 500kV              │
+│ polpaico_500.csv         │ 4.8 MB    │ Polpaico 500kV                   │
+│ quillota_220.csv         │ 4.3 MB    │ Quillota 220kV                   │
+│ extraction_stats.csv     │ 1.1 KB    │ Estadísticas de extracción       │
+└──────────────────────────┴───────────┴──────────────────────────────────┘
+
+3.3 COLUMNAS DE ARCHIVOS PROCESADOS (6 columnas)
+-------------------------------------------------
+┌─────────────┬────────────────────────────────────────────────────────────┐
+│ COLUMNA     │ DESCRIPCIÓN                                                │
+├─────────────┼────────────────────────────────────────────────────────────┤
+│ timestamp   │ Marca de tiempo completa: YYYY-MM-DD HH:MM:SS             │
+│             │ Ejemplo: 2019-01-01 01:00:00                               │
+├─────────────┼────────────────────────────────────────────────────────────┤
+│ fecha       │ Solo la fecha: YYYY-MM-DD                                  │
+│             │ Ejemplo: 2019-01-01                                        │
+├─────────────┼────────────────────────────────────────────────────────────┤
+│ hora        │ Hora del día (1 a 24)                                      │
+│             │ Ejemplo: 1                                                 │
+├─────────────┼────────────────────────────────────────────────────────────┤
+│ costo_usd   │ Costo marginal en USD/MWh (punto decimal)                 │
+│             │ Ejemplo: 49.56                                             │
+├─────────────┼────────────────────────────────────────────────────────────┤
+│ costo_clp   │ Costo marginal en CLP/MWh (pesos chilenos)                │
+│             │ Ejemplo: 34.4784                                           │
+├─────────────┼────────────────────────────────────────────────────────────┤
+│ barra       │ Nombre completo de la barra                                │
+│             │ Ejemplo: BA S/E LOS VILOS 220KV BP1                        │
+└─────────────┴────────────────────────────────────────────────────────────┘
+
+3.4 RANGO TEMPORAL
+------------------
+- Inicio: Enero 2019
+- Fin: ~ Diciembre 2025 (dependiendo de la última descarga)
+- Registros por subestación: ~55,000+ filas (= ~6.3 años × 365 días × 24 horas)
+- Granularidad: HORARIA (un registro por hora)
+
+
+================================================================================
+4. DATOS DE POLPAICO (HISTÓRICOS EXTENDIDOS)
+   Directorio: data/polpaico/
+================================================================================
+
+4.1 ARCHIVOS
+-------------
+- polpaico_500kv.csv    (5.8 MB)  → Solo la barra de 500kV
+- polpaico_all_data.csv (22.6 MB) → Todas las barras de Polpaico
+
+4.2 FORMATO
+-----------
+Mismo formato CSV que los archivos de data/barras/ pero con columnas
+adicionales del CEN:
+
+┌─────────────────────────────────┬────────────────────────────────────────┐
+│ COLUMNA                         │ DESCRIPCIÓN                            │
+├─────────────────────────────────┼────────────────────────────────────────┤
+│ barra_mnemotecnico              │ Código mnemotécnico original del CEN   │
+│ barra_referencia_mnemotecnico   │ Código de barra de referencia          │
+│ fecha                           │ Fecha YYYY-MM-DD                       │
+│ hora                            │ Hora (1-24)                            │
+│ costo_en_dolares                │ Costo en USD/MWh                       │
+│ costo_en_pesos                  │ Costo en CLP/MWh                       │
+│ nombre                          │ Nombre de la barra                     │
+└─────────────────────────────────┴────────────────────────────────────────┘
+
+
+================================================================================
+5. DATOS EXÓGENOS (ECONÓMICOS Y CLIMÁTICOS)
+   Directorio: data/exogenous/
+================================================================================
+
+Estos datos se descargan automáticamente mediante el script:
+scripts/download_exogenous_data.py
+
+5.1 FUENTES DE DATOS
+---------------------
+- mindicador.cl    → Indicadores económicos chilenos (USD, cobre, euro, UF)
+- NOAA             → Índice Oceánico del Niño (ONI) para El Niño/La Niña
+
+5.2 ARCHIVO: exogenous_data.csv
+--------------------------------
+- Formato: CSV estándar (separador coma, punto decimal)
+- Filas: ~2,559 (una por día desde 2019-01-01)
+- Granularidad: DIARIA
+
+5.3 COLUMNAS (13 columnas)
+--------------------------
+┌───────────────────────┬──────────────────────────────────────────────────┐
+│ COLUMNA               │ DESCRIPCIÓN                                      │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ fecha                 │ Fecha: YYYY-MM-DD                                │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ usd_clp               │ Tipo de cambio dólar/peso chileno                │
+│                       │ Ejemplo: 694.77                                  │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ cobre_usd             │ Precio del cobre en USD/libra                    │
+│                       │ Ejemplo: 2.71                                    │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ eur_clp               │ Tipo de cambio euro/peso chileno                 │
+│                       │ Ejemplo: 794.75                                  │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ uf_clp                │ Valor de la UF en pesos chilenos                 │
+│                       │ (Unidad de Fomento, ajustada por inflación)      │
+│                       │ Ejemplo: 27565.79                                │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ oni_index             │ Índice Oceánico del Niño (ONI)                   │
+│                       │ Positivo = El Niño, Negativo = La Niña           │
+│                       │ Ejemplo: 0.89                                    │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ usd_clp_change_7d     │ Cambio porcentual del USD/CLP en 7 días         │
+│                       │ (Feature calculada)                              │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ usd_clp_change_30d    │ Cambio porcentual del USD/CLP en 30 días        │
+│                       │ (Feature calculada)                              │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ usd_clp_rolling_30d   │ Promedio móvil de 30 días del USD/CLP           │
+│                       │ (Feature calculada)                              │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ cobre_change_30d      │ Cambio porcentual del cobre en 30 días          │
+│                       │ (Feature calculada)                              │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ is_el_nino            │ Flag binario: 1 si ONI > 0.5 (El Niño activo)   │
+│                       │ 0 en caso contrario                              │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ is_la_nina            │ Flag binario: 1 si ONI < -0.5 (La Niña activa)  │
+│                       │ 0 en caso contrario                              │
+├───────────────────────┼──────────────────────────────────────────────────┤
+│ oni_squared           │ ONI al cuadrado (captura efecto no lineal)       │
+│                       │ (Feature calculada)                              │
+└───────────────────────┴──────────────────────────────────────────────────┘
+
+NOTA: Los valores económicos de fin de semana y feriados se interpolan
+linealmente desde el último día de publicación.
+
+
+================================================================================
+6. ARCHIVOS DE PREDICCIONES GENERADAS
+   Directorio: data/
+================================================================================
+
+Estos archivos contienen las predicciones generadas por los diferentes modelos:
+
+- prediction_arima_losvilos.csv   → Predicción ARIMA para Los Vilos
+- prediction_prophet_losvilos.csv → Predicción Prophet para Los Vilos
+- prediction_xgboost_losvilos.csv → Predicción XGBoost para Los Vilos
+
+
+================================================================================
+7. FLUJO DE DATOS (PIPELINE)
+================================================================================
+
+   ┌──────────────────┐
+   │  API del CEN     │  Descarga automática vía API REST
+   │  (sipub)         │  https://sipub.coordinador.cl/api/v1/
+   └────────┬─────────┘
+            │
+            ▼
+   ┌──────────────────┐
+   │  data/raw/       │  Archivos TSV mensuales con TODAS las barras
+   │  (TSV crudos)    │  Separador decimal: COMA
+   └────────┬─────────┘
+            │  Script de procesamiento: extrae barras de interés
+            │  Convierte separador decimal de coma a punto
+            ▼
+   ┌──────────────────┐
+   │  data/barras/    │  Un CSV limpio por cada subestación
+   │  (CSV limpios)   │  Separador decimal: PUNTO
+   └────────┬─────────┘
+            │
+            │  ┌──────────────────┐
+            │  │  data/exogenous/ │  Datos económicos (mindicador.cl)
+            │  │  (CSV)           │  + Índice ONI (NOAA)
+            │  └────────┬─────────┘
+            │           │
+            ▼           ▼
+   ┌──────────────────────────┐
+   │  MODELO PREDICTIVO       │  XGBoost V2 (modelo principal)
+   │  XGBoost V2              │  Entrena con datos de barras + exógenos
+   │                          │  Predice hasta 1 año adelante
+   └────────┬─────────────────┘
+            │
+            ▼
+   ┌──────────────────┐
+   │  Dashboard CMARG │  Aplicación Dash (Python)
+   │  (app.py)        │  Visualización interactiva
+   └──────────────────┘
+
+
+================================================================================
+8. CONTEXTO: ¿QUÉ SON LOS COSTOS MARGINALES?
+================================================================================
+
+Los costos marginales (CMg) son el costo de producir una unidad adicional
+de energía eléctrica (1 MWh) en un nodo específico del sistema eléctrico.
+
+- Se calculan HORA A HORA por el Coordinador Eléctrico Nacional (CEN)
+- Cada BARRA (nodo) del sistema tiene su propio costo marginal
+- Los costos se expresan en USD/MWh y CLP/MWh
+- Valores de $0 indican exceso de oferta (generación solar/eólica abundante)
+- Valores altos indican escasez o alta demanda
+
+¿POR QUÉ IMPORTAN?
+- Son la base para la liquidación de energía entre generadores
+- Determinan el ingreso de las centrales de generación
+- Son indicadores clave para decisiones de inversión
+
+PATRONES TÍPICOS:
+- Hora del día: Precios bajos al mediodía (generación solar), altos al atardecer
+- Estacionalidad: Precios más altos en invierno (mayo-agosto) por menor
+  generación solar y mayor demanda de calefacción
+- El Niño/La Niña: Afectan la disponibilidad hídrica y por ende los costos
+
+
+================================================================================
+9. SOBRE EL COORDINADOR ELÉCTRICO NACIONAL (CEN)
+================================================================================
+
+El CEN (https://www.coordinador.cl/) es el organismo encargado de:
+- Coordinar la operación del Sistema Eléctrico Nacional (SEN) de Chile
+- Determinar los costos marginales de energía hora a hora
+- Publicar datos abiertos de operación del sistema
+
+API PÚBLICA:
+- Base: https://sipub.coordinador.cl/api/v1/
+- Endpoint de costos marginales: /recursos/costoMarBar
+- Formato de respuesta: TSV (Tab-Separated Values)
+- Los datos son de libre acceso y se actualizan diariamente
+
+DATOS QUE PUBLICA EL CEN:
+- Costos marginales por barra (los que usamos)
+- Generación por tipo de fuente (solar, eólica, hidro, térmica)
+- Demanda del sistema
+- Programación de la operación
+- Estado de transmisión
+
+
+================================================================================
+10. CRECIMIENTO ECONÓMICO DE CHILE (PIB)
+================================================================================
+
+10.1 DATOS HISTÓRICOS DE CRECIMIENTO DEL PIB
+----------------------------------------------
+┌──────────┬────────────┬──────────────────────────────────────────────────┐
+│ AÑO      │ PIB (%)    │ CONTEXTO                                         │
+├──────────┼────────────┼──────────────────────────────────────────────────┤
+│ 2019     │  0.8%      │ Crisis social octubre, desaceleración global     │
+│ 2020     │ -6.1%      │ Pandemia COVID-19, caída histórica               │
+│ 2021     │ 11.7%      │ Rebote post-pandemia, retiros AFP                │
+│ 2022     │  2.4%      │ Normalización, alta inflación                    │
+│ 2023     │  0.2%      │ Contracción por ajuste monetario, inflación      │
+│ 2024     │  2.5%      │ Recuperación, estimación Banco Central: 2.2-2.8% │
+│ 2025(e)  │  2.4%      │ Proyección OCDE / Banco Central: 1.75-2.75%     │
+│ 2026(e)  │  2.2%      │ Proyección Hacienda: 2.3% / OCDE: 2.2%          │
+└──────────┴────────────┴──────────────────────────────────────────────────┘
+
+Fuentes: Banco Central de Chile, Ministerio de Hacienda, OCDE, FMI
+
+10.2 PROYECCIONES POR INSTITUCIÓN (2025-2026)
+-----------------------------------------------
+┌─────────────────────┬──────────────┬──────────────┐
+│ INSTITUCIÓN          │ 2025 (%)     │ 2026 (%)     │
+├─────────────────────┼──────────────┼──────────────┤
+│ Banco Central Chile │ 2.5  (±0.5)  │ 2.0  (±0.5)  │
+│ Min. Hacienda       │ 2.5          │ 2.3          │
+│ OCDE                │ 2.4          │ 2.2          │
+│ Fitch / BMI         │ 2.1          │ --           │
+│ Santander Chile     │ 2.4          │ 1.8          │
+│ FMI                 │ 2.3          │ 2.5          │
+└─────────────────────┴──────────────┴──────────────┘
+
+PIB POTENCIAL DE CHILE: Se estima en torno a 2.0-2.5% anual
+(tendencia de mediano-largo plazo según el Banco Central).
+
+
+================================================================================
+11. CORRELACIÓN PIB ↔ DEMANDA ELÉCTRICA ↔ COSTOS MARGINALES
+================================================================================
+
+11.1 RELACIÓN HISTÓRICA
+-------------------------
+Existe una correlación positiva entre el crecimiento del PIB y la demanda
+de electricidad en Chile, aunque esta relación se ha ido "desacoplando"
+parcialmente desde 2010:
+
+- Elasticidad PIB-Electricidad en Chile: ~0.7 a 1.0
+  → Un 1% de crecimiento del PIB genera ~0.7-1.0% más demanda eléctrica
+
+- La intensidad energética de Chile bajó 35% entre 2000-2022
+  → Se consume menos energía por unidad de PIB (eficiencia)
+
+- El sector minero (principal motor del PIB) consume ~35% de la electricidad
+
+FACTORES CLAVE:
+- Minería del cobre: altamente intensiva en energía
+- Electromovilidad: creciente consumo eléctrico del transporte
+- Hidrógeno verde: potencial aumento masivo de demanda (escenario CEN: +5.2%)
+- Eficiencia energética: Plan Nacional 2022-2026 reduce intensidad 13-15%
+
+11.2 IMPACTO EN COSTOS MARGINALES
+-----------------------------------
+Mayor crecimiento PIB → Mayor demanda eléctrica → Costos marginales más altos
+
+Sin embargo, el efecto se amortigua por:
+- Masiva expansión de energía solar y eólica (68% de generación en 2024)
+- 38.6 GW de capacidad instalada en 2025 (~50% renovable no convencional)
+- Baterías (BESS): 1,700 MW instalados en 2025 + 4,500 MW en construcción
+- Retiro progresivo de carbón: 700 MW retirados en Q1 2026
+
+11.3 MATRIZ ENERGÉTICA CHILE 2025
+-----------------------------------
+┌─────────────────────┬────────────────┬───────────────────────────────────┐
+│ FUENTE               │ % GENERACIÓN   │ TENDENCIA                         │
+├─────────────────────┼────────────────┼───────────────────────────────────┤
+│ Solar fotovoltaica  │    ~22%        │ ↑ Crecimiento acelerado           │
+│ Eólica              │    ~16%        │ ↑ En expansión                    │
+│ Hidroeléctrica      │    ~25%        │ ↓ Afectada por sequía 2025        │
+│ Gas natural         │    ~15%        │ → Respaldo térmico                │
+│ Carbón              │    ~12%        │ ↓ En retiro (meta: 0% en 2040)   │
+│ Biomasa/Geotérmica  │    ~5%         │ → Estable                         │
+│ Otros               │    ~5%         │ → Diversificación                 │
+└─────────────────────┴────────────────┴───────────────────────────────────┘
+
+META CHILE: 80% renovable para 2030, carbono neutral para 2050
+
+
+================================================================================
+12. ESCENARIOS FUTUROS DE CRECIMIENTO Y SU IMPACTO EN COSTOS MARGINALES
+================================================================================
+
+A continuación se presentan 3 ESCENARIOS de crecimiento económico
+y su impacto proyectado en la demanda eléctrica y costos marginales
+para los próximos 5 años (2026-2030).
+
+Se asume una elasticidad PIB-Electricidad de ~0.8 para Chile
+(desacoplamiento parcial gracias a la eficiencia energética).
+
+COSTO MARGINAL PROMEDIO DE REFERENCIA (2024): ~$62 USD/MWh
+
+12.1 ESCENARIO CONSERVADOR (PIB +2.0% anual)
+----------------------------------------------
+Supuestos: Crecimiento moderado, minería estable, sin shocks externos.
+Demanda eléctrica: +1.6% anual (~0.8 × PIB)
+
+┌──────────┬───────────┬──────────────────┬──────────────────────────────────┐
+│ AÑO      │ PIB (%)   │ Δ Demanda Elec.  │ CMg Prom. Estimado (USD/MWh)     │
+├──────────┼───────────┼──────────────────┼──────────────────────────────────┤
+│ 2026     │ 2.0%      │ +1.6%            │ $58 - $65                        │
+│ 2027     │ 2.0%      │ +1.6%            │ $55 - $63                        │
+│ 2028     │ 2.0%      │ +1.6%            │ $52 - $60                        │
+│ 2029     │ 2.0%      │ +1.6%            │ $50 - $58                        │
+│ 2030     │ 2.0%      │ +1.6%            │ $48 - $56                        │
+└──────────┴───────────┴──────────────────┴──────────────────────────────────┘
+
+ANÁLISIS: Con crecimiento moderado del 2%, la expansión renovable (solar +
+eólica + baterías) supera el crecimiento de la demanda. Los costos
+marginales tienden a BAJAR progresivamente. La incorporación de 4,500 MW
+de baterías en 2026 suaviza los peaks y reduce la volatilidad.
+
+RIESGOS: Sequía prolongada (reduce hidroeléctrica), aumento del precio
+del gas natural importado, retrasos en proyectos renovables.
+
+12.2 ESCENARIO BASE (PIB +3.0% anual)
+----------------------------------------------
+Supuestos: Recuperación sostenida, inversión minera activa, litio y cobre.
+Demanda eléctrica: +2.4% anual
+
+┌──────────┬───────────┬──────────────────┬──────────────────────────────────┐
+│ AÑO      │ PIB (%)   │ Δ Demanda Elec.  │ CMg Prom. Estimado (USD/MWh)     │
+├──────────┼───────────┼──────────────────┼──────────────────────────────────┤
+│ 2026     │ 3.0%      │ +2.4%            │ $60 - $70                        │
+│ 2027     │ 3.0%      │ +2.4%            │ $58 - $68                        │
+│ 2028     │ 3.0%      │ +2.4%            │ $56 - $66                        │
+│ 2029     │ 3.0%      │ +2.4%            │ $55 - $65                        │
+│ 2030     │ 3.0%      │ +2.4%            │ $53 - $63                        │
+└──────────┴───────────┴──────────────────┴──────────────────────────────────┘
+
+ANÁLISIS: Con un 3%, la demanda crece más rápido pero la expansión
+renovable aún logra compensar. Los costos bajan moderadamente. La minería
+del cobre y litio impulsan demanda pero también inversión en renovables
+(por compromisos corporativos de energía limpia). Los costos se estabilizan
+hacia final de la década en ~$55-63 USD/MWh.
+
+DRIVERS CLAVE:
+- Expansión de la minería de litio (nuevos proyectos desde 2027)
+- Electromovilidad (~5% de parque vehicular eléctrico para 2030)
+- Data centers (crecimiento de la industria tecnológica en Chile)
+
+12.3 ESCENARIO OPTIMISTA (PIB +4.0% anual)
+----------------------------------------------
+Supuestos: Boom de cobre/litio, inversión extranjera masiva, hidrógeno verde.
+Demanda eléctrica: +3.2% a +5.2% anual (si se despliega H2V)
+
+┌──────────┬───────────┬──────────────────┬──────────────────────────────────┐
+│ AÑO      │ PIB (%)   │ Δ Demanda Elec.  │ CMg Prom. Estimado (USD/MWh)     │
+├──────────┼───────────┼──────────────────┼──────────────────────────────────┤
+│ 2026     │ 4.0%      │ +3.2%            │ $63 - $75                        │
+│ 2027     │ 4.0%      │ +3.5%            │ $65 - $78                        │
+│ 2028     │ 4.0%      │ +4.0%            │ $60 - $72 (baterías compensan)   │
+│ 2029     │ 4.0%      │ +4.5%            │ $58 - $70                        │
+│ 2030     │ 4.0%      │ +5.2%            │ $55 - $68 (depende H2V)          │
+└──────────┴───────────┴──────────────────┴──────────────────────────────────┘
+
+ANÁLISIS: Un crecimiento del 4% generaría tensión entre oferta y demanda
+eléctrica. En el corto plazo (2026-2027), los costos marginales podrían
+SUBIR antes de estabilizarse gracias a la masiva entrada de renovables y
+baterías. Si se despliega hidrógeno verde a gran escala, la demanda podría
+saltar a +5.2% anual, requiriendo inversiones de infraestructura aceleradas.
+
+ESTE ESCENARIO ES EL MÁS VOLÁTIL:
+- Costos marginales más altos en hours peak (19:00-22:00)
+- Necesidad de reforzar transmisión norte-sur (minería-consumo)
+- Oportunidad: el precio alto incentiva aún más inversión renovable
+
+¿QUÉ HARÍA EL CEN?
+- Programar más generación térmica de respaldo en peak
+- Acelerar la expansión de almacenamiento (baterías + bombeo)
+- Despachar generación distribuida y demand response
+
+
+12.4 TABLA COMPARATIVA DE ESCENARIOS
+--------------------------------------
+
+                    CONSERVADOR    BASE          OPTIMISTA
+                    (PIB +2%)      (PIB +3%)     (PIB +4%)
+──────────────────────────────────────────────────────────────
+Demanda Elec.       +1.6%/año      +2.4%/año     +3.2-5.2%/año
+CMg 2026            $58-65         $60-70        $63-75
+CMg 2028            $52-60         $56-66        $60-72
+CMg 2030            $48-56         $53-63        $55-68
+Riesgo CMg          Bajo           Medio         Alto
+Volatilidad         Baja           Media         Alta
+Inversión requerida Moderada       Alta          Muy alta
+──────────────────────────────────────────────────────────────
+
+12.5 VARIABLES QUE PODRÍAN ALTERAR LOS ESCENARIOS
+---------------------------------------------------
+
+VARIABLES AL ALZA (costos más altos):
+  ☐ Sequía prolongada → menos hidro → más gas/carbón → costos suben
+  ☐ El Niño fuerte → reduce disponibilidad hídrica
+  ☐ Precio del gas natural sube (conflictos geopolíticos)
+  ☐ Retraso en proyectos renovables (permisos, transmisión)
+  ☐ Boom minero (cobre > $5/lb) → demanda eléctrica dispara
+
+VARIABLES A LA BAJA (costos más bajos):
+  ☐ La Niña → más lluvia → más generación hidro → costos bajan
+  ☐ Baterías masivas (6,000+ MW para 2027) → eliminan peaks
+  ☐ Sobreoferta solar (curtailment → precios $0 al mediodía)
+  ☐ Eficiencia energética acelera (reducción de intensidad > 15%)
+  ☐ Caída del precio del cobre → menor demanda minera
+
+12.6 IMPACTO EN EL MODELO PREDICTIVO XGBOOST V2
+--------------------------------------------------
+Nuestro modelo XGBoost V2 ya incorpora:
+  ✓ Índice ONI (El Niño / La Niña)
+  ✓ Precio del cobre USD
+  ✓ Tipo de cambio USD/CLP
+  ✓ Estacionalidad (hora, día, mes)
+
+Para incorporar escenarios de crecimiento PIB se podría:
+  1. Agregar PIB trimestral como feature exógena
+  2. Crear un "factor de escala de demanda" basado en el escenario
+  3. Multiplicar las predicciones base por (1 + crecimiento_demanda)
+  4. Generar bandas de confianza por escenario
+
+Esto permitiría al usuario del dashboard seleccionar:
+  "¿Qué escenario quieres ver? Conservador / Base / Optimista"
+  Y obtener predicciones ajustadas a cada contexto de crecimiento.
+
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
