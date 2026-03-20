@@ -802,6 +802,14 @@ def create_empty_figure(message: str) -> go.Figure:
     return fig
 
 
+# Expose Flask server for gunicorn (Cloud Run)
+server = app.server
+
+
 if __name__ == '__main__':
-    print("🚀 Dashboard disponible en: http://127.0.0.1:8051")
-    app.run(debug=True, port=8051)
+    import os
+    port = int(os.environ.get('PORT', 8051))
+    debug = os.environ.get('DASH_DEBUG', 'true').lower() == 'true'
+    print(f"🚀 Dashboard disponible en: http://127.0.0.1:{port}")
+    app.run(debug=debug, port=port, host='0.0.0.0')
+
