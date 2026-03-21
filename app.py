@@ -218,6 +218,60 @@ app.index_string = '''
                 font-weight: 600;
                 margin-right: 8px;
             }
+            /* Date picker dark theme */
+            .DateInput_input {
+                background: #1a1a2e !important;
+                color: #e2e8f0 !important;
+                border: 1px solid #2d2d44 !important;
+                border-radius: 8px !important;
+                padding: 8px 12px !important;
+                font-family: 'Inter', sans-serif !important;
+                font-size: 0.9rem !important;
+            }
+            .DateRangePickerInput {
+                background: transparent !important;
+                border: none !important;
+            }
+            .DateRangePickerInput_arrow {
+                color: #94a3b8 !important;
+            }
+            .CalendarDay__selected {
+                background: #6366f1 !important;
+                border-color: #6366f1 !important;
+            }
+            .CalendarDay__selected_span {
+                background: rgba(99, 102, 241, 0.3) !important;
+                border-color: rgba(99, 102, 241, 0.3) !important;
+            }
+            .DayPickerNavigation_button {
+                border: 1px solid #2d2d44 !important;
+            }
+            .year-btn {
+                background: rgba(99, 102, 241, 0.15);
+                border: 1px solid rgba(99, 102, 241, 0.3);
+                color: #a5b4fc;
+                padding: 5px 14px;
+                border-radius: 20px;
+                cursor: pointer;
+                font-size: 0.8rem;
+                font-weight: 500;
+                transition: all 0.2s ease;
+                margin-right: 6px;
+                font-family: 'Inter', sans-serif;
+            }
+            .year-btn:hover {
+                background: rgba(99, 102, 241, 0.35);
+                border-color: #6366f1;
+                color: white;
+            }
+            .range-label {
+                color: #94a3b8;
+                font-size: 0.8rem;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 6px;
+            }
         </style>
     </head>
     <body>
@@ -374,6 +428,51 @@ app.layout = dbc.Container(fluid=True, style={'backgroundColor': COLORS['backgro
         ])
     ]),
     
+    # Date Range Filter
+    dbc.Row([
+        dbc.Col([
+            html.Div(style={**CARD_STYLE, 'padding': '15px 20px'}, children=[
+                dbc.Row([
+                    dbc.Col([
+                        html.Div("📅 Rango de Fechas", className="range-label"),
+                        dcc.DatePickerRange(
+                            id='date-range-picker',
+                            display_format='DD/MM/YYYY',
+                            start_date_placeholder_text='Desde',
+                            end_date_placeholder_text='Hasta',
+                            clearable=True,
+                            with_portal=False,
+                            first_day_of_week=1,
+                            style={'width': '100%'}
+                        )
+                    ], md=4),
+                    dbc.Col([
+                        html.Div("⚡ Acceso Rápido", className="range-label"),
+                        html.Div(id='year-buttons-container', children=[
+                            html.Button('Todo', id='yr-btn-all', className='year-btn', n_clicks=0),
+                            html.Button('2025', id='yr-btn-2025', className='year-btn', n_clicks=0),
+                            html.Button('2024', id='yr-btn-2024', className='year-btn', n_clicks=0),
+                            html.Button('2023', id='yr-btn-2023', className='year-btn', n_clicks=0),
+                            html.Button('2022', id='yr-btn-2022', className='year-btn', n_clicks=0),
+                            html.Button('2021', id='yr-btn-2021', className='year-btn', n_clicks=0),
+                            html.Button('2020', id='yr-btn-2020', className='year-btn', n_clicks=0),
+                            html.Button('Último Año', id='yr-btn-1y', className='year-btn', n_clicks=0, 
+                                       style={'background': 'rgba(34, 211, 238, 0.15)', 'borderColor': 'rgba(34, 211, 238, 0.3)', 'color': '#22d3ee'}),
+                            html.Button('Últimos 3 Años', id='yr-btn-3y', className='year-btn', n_clicks=0,
+                                       style={'background': 'rgba(34, 211, 238, 0.15)', 'borderColor': 'rgba(34, 211, 238, 0.3)', 'color': '#22d3ee'}),
+                        ])
+                    ], md=6),
+                    dbc.Col([
+                        html.Div("📊 Datos Filtrados", className="range-label"),
+                        html.Div(id='filter-summary', children=[
+                            html.Span("Sin datos", style={'color': COLORS['text_muted'], 'fontSize': '0.85rem'})
+                        ])
+                    ], md=2)
+                ])
+            ])
+        ])
+    ], id='date-filter-row', style={'marginBottom': '20px', 'display': 'none'}),
+    
     # Gráficos principales
     dcc.Loading(id="loading-main", type="circle", color=COLORS['primary'], children=[
         dbc.Row([
@@ -432,13 +531,15 @@ app.layout = dbc.Container(fluid=True, style={'backgroundColor': COLORS['backgro
     
     # Stores
     dcc.Store(id='stored-data'),
-    dcc.Store(id='prediction-data')
+    dcc.Store(id='prediction-data'),
+    dcc.Store(id='full-data-store')  # Stores full unfiltered data for date filtering
 ])
 
 
 # --- Callbacks ---
 @app.callback(
     [Output('stored-data', 'data'),
+     Output('full-data-store', 'data'),
      Output('status-message', 'children'),
      Output('predict-btn', 'disabled'),
      Output('kpi-years', 'children'),
@@ -448,23 +549,31 @@ app.layout = dbc.Container(fluid=True, style={'backgroundColor': COLORS['backgro
      Output('kpi-max', 'children'),
      Output('kpi-volatility', 'children'),
      Output('historical-plot', 'figure'),
-     Output('yearly-box-plot', 'figure')],
+     Output('yearly-box-plot', 'figure'),
+     Output('date-filter-row', 'style'),
+     Output('date-range-picker', 'min_date_allowed'),
+     Output('date-range-picker', 'max_date_allowed'),
+     Output('date-range-picker', 'start_date'),
+     Output('date-range-picker', 'end_date')],
     [Input('load-btn', 'n_clicks')],
     [State('bar-selector', 'value')],
     prevent_initial_call=True
 )
 def load_bar_data(n_clicks, selected_bar):
+    empty_extra = ({'display': 'none'}, None, None, None, None)
     if not selected_bar:
-        return (None, "⚠️ Selecciona una barra primero.", True,
+        return (None, None, "⚠️ Selecciona una barra primero.", True,
                 "--", "--", "--", "--", "--", "--",
                 create_empty_figure("Selecciona una barra"),
-                create_empty_figure("Selecciona una barra"))
+                create_empty_figure("Selecciona una barra"),
+                *empty_extra)
     
     if selected_bar not in loaded_bars:
-        return (None, f"❌ Datos no disponibles para: {selected_bar}", True,
+        return (None, None, f"❌ Datos no disponibles para: {selected_bar}", True,
                 "--", "--", "--", "--", "--", "--",
                 create_empty_figure("Sin datos"),
-                create_empty_figure("Sin datos"))
+                create_empty_figure("Sin datos"),
+                *empty_extra)
     
     df = loaded_bars[selected_bar].copy()
     
@@ -509,7 +618,8 @@ def load_bar_data(n_clicks, selected_bar):
         paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
         margin=dict(l=0, r=0, t=30, b=0),
         legend=dict(orientation='h', y=1.1),
-        xaxis=dict(gridcolor='rgba(255,255,255,0.1)'),
+        xaxis=dict(gridcolor='rgba(255,255,255,0.1)',
+                   rangeslider=dict(visible=True, bgcolor='rgba(26,26,46,0.5)', thickness=0.05)),
         yaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='USD/MWh')
     )
     
@@ -526,16 +636,167 @@ def load_bar_data(n_clicks, selected_bar):
         showlegend=False
     )
     
-    # Guardar datos para predicción
+    # Guardar datos para predicción (full data always)
     stored = df.to_json(date_format='iso', orient='split')
     
     zona = info.get('zona', '')
     message = f"✅ {info.get('icon', '')} {info.get('nombre', selected_bar)} ({zona}) | {years:.1f} años | {records:,} registros"
     
-    return (stored, message, False,
+    # Date range info
+    min_date = df['timestamp'].min().date().isoformat()
+    max_date = df['timestamp'].max().date().isoformat()
+    
+    return (stored, stored, message, False,
             f"{years:.1f}", f"{records:,}", f"${avg_price:.1f}",
             f"${min_price:.1f}", f"${max_price:.1f}", f"{volatility:.1f}%",
-            hist_fig, box_fig)
+            hist_fig, box_fig,
+            {'marginBottom': '20px'},  # Show date filter
+            min_date, max_date, min_date, max_date)
+
+
+# --- Date range filtering callback ---
+@app.callback(
+    [Output('historical-plot', 'figure', allow_duplicate=True),
+     Output('yearly-box-plot', 'figure', allow_duplicate=True),
+     Output('kpi-years', 'children', allow_duplicate=True),
+     Output('kpi-records', 'children', allow_duplicate=True),
+     Output('kpi-avg', 'children', allow_duplicate=True),
+     Output('kpi-min', 'children', allow_duplicate=True),
+     Output('kpi-max', 'children', allow_duplicate=True),
+     Output('kpi-volatility', 'children', allow_duplicate=True),
+     Output('filter-summary', 'children'),
+     Output('date-range-picker', 'start_date', allow_duplicate=True),
+     Output('date-range-picker', 'end_date', allow_duplicate=True)],
+    [Input('date-range-picker', 'start_date'),
+     Input('date-range-picker', 'end_date'),
+     Input('yr-btn-all', 'n_clicks'),
+     Input('yr-btn-2025', 'n_clicks'),
+     Input('yr-btn-2024', 'n_clicks'),
+     Input('yr-btn-2023', 'n_clicks'),
+     Input('yr-btn-2022', 'n_clicks'),
+     Input('yr-btn-2021', 'n_clicks'),
+     Input('yr-btn-2020', 'n_clicks'),
+     Input('yr-btn-1y', 'n_clicks'),
+     Input('yr-btn-3y', 'n_clicks')],
+    [State('full-data-store', 'data'),
+     State('bar-selector', 'value')],
+    prevent_initial_call=True
+)
+def filter_by_date(start_date, end_date, btn_all, btn_2025, btn_2024, btn_2023,
+                   btn_2022, btn_2021, btn_2020, btn_1y, btn_3y, full_data, selected_bar):
+    
+    no_update = dash.no_update
+    empty = (no_update,) * 11
+    
+    if not full_data:
+        return empty
+    
+    df = pd.read_json(full_data, orient='split')
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    
+    info = BARRAS_INFO.get(selected_bar, {})
+    bar_color = info.get('color', COLORS['primary'])
+    
+    # Determine which button was clicked
+    ctx = callback_context
+    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0] if ctx.triggered else None
+    
+    data_max = df['timestamp'].max()
+    data_min = df['timestamp'].min()
+    
+    # Handle year button clicks — set date range based on button
+    if triggered_id and triggered_id.startswith('yr-btn'):
+        if triggered_id == 'yr-btn-all':
+            start_date = data_min.date().isoformat()
+            end_date = data_max.date().isoformat()
+        elif triggered_id == 'yr-btn-1y':
+            start_date = (data_max - pd.DateOffset(years=1)).date().isoformat()
+            end_date = data_max.date().isoformat()
+        elif triggered_id == 'yr-btn-3y':
+            start_date = (data_max - pd.DateOffset(years=3)).date().isoformat()
+            end_date = data_max.date().isoformat()
+        else:
+            year = int(triggered_id.split('-')[-1])
+            start_date = f"{year}-01-01"
+            end_date = f"{year}-12-31"
+    
+    if not start_date or not end_date:
+        return empty
+    
+    # Filter data
+    mask = (df['timestamp'] >= pd.to_datetime(start_date)) & (df['timestamp'] <= pd.to_datetime(end_date) + pd.Timedelta(days=1))
+    df_filtered = df[mask].copy()
+    
+    if df_filtered.empty:
+        summary = html.Span("Sin datos en rango", style={'color': '#ef4444', 'fontSize': '0.85rem'})
+        return (create_empty_figure("Sin datos en rango seleccionado"),
+                create_empty_figure("Sin datos"),
+                "--", "--", "--", "--", "--", "--",
+                summary, start_date, end_date)
+    
+    cost_col = 'costo_marginal' if 'costo_marginal' in df_filtered.columns else 'costo_usd'
+    
+    # Recalculate KPIs for filtered data
+    years_f = (df_filtered['timestamp'].max() - df_filtered['timestamp'].min()).days / 365
+    records_f = len(df_filtered)
+    avg_f = df_filtered[cost_col].mean()
+    min_f = df_filtered[cost_col].min()
+    max_f = df_filtered[cost_col].max()
+    vol_f = (df_filtered[cost_col].std() / max(avg_f, 0.01)) * 100
+    
+    # Rebuild historical chart
+    df_daily = df_filtered.set_index('timestamp').resample('D')[cost_col].mean().reset_index()
+    
+    hist_fig = go.Figure()
+    hist_fig.add_trace(go.Scatter(
+        x=df_daily['timestamp'], y=df_daily[cost_col],
+        mode='lines', name='CMg Diario',
+        line=dict(color=bar_color, width=1.5),
+        fill='tozeroy', fillcolor=f'rgba({int(bar_color[1:3],16)},{int(bar_color[3:5],16)},{int(bar_color[5:7],16)},0.1)'
+    ))
+    
+    df_daily['ma30'] = df_daily[cost_col].rolling(window=30).mean()
+    hist_fig.add_trace(go.Scatter(
+        x=df_daily['timestamp'], y=df_daily['ma30'],
+        mode='lines', name='Media Móvil 30d',
+        line=dict(color=COLORS['accent'], width=2)
+    ))
+    
+    hist_fig.update_layout(
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=30, b=0),
+        legend=dict(orientation='h', y=1.1),
+        xaxis=dict(gridcolor='rgba(255,255,255,0.1)',
+                   rangeslider=dict(visible=True, bgcolor='rgba(26,26,46,0.5)', thickness=0.05)),
+        yaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='USD/MWh')
+    )
+    
+    # Rebuild box plot
+    df_filtered['year'] = df_filtered['timestamp'].dt.year
+    box_fig = px.box(df_filtered, x='year', y=cost_col,
+                     color_discrete_sequence=[bar_color])
+    box_fig.update_layout(
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=30, b=0),
+        xaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='Año'),
+        yaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='USD/MWh'),
+        showlegend=False
+    )
+    
+    # Build filter summary
+    start_fmt = pd.to_datetime(start_date).strftime('%d/%m/%Y')
+    end_fmt = pd.to_datetime(end_date).strftime('%d/%m/%Y')
+    summary = html.Div([
+        html.Div(f"{records_f:,}", style={'fontSize': '1.1rem', 'fontWeight': '600', 'color': COLORS['secondary']}),
+        html.Div("registros", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+    ])
+    
+    return (hist_fig, box_fig,
+            f"{years_f:.1f}", f"{records_f:,}", f"${avg_f:.1f}",
+            f"${min_f:.1f}", f"${max_f:.1f}", f"{vol_f:.1f}%",
+            summary, start_date, end_date)
 
 
 @app.callback(
