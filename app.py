@@ -925,9 +925,27 @@ def generate_prediction(n_clicks, gdp_growth, stored_data, years_ahead, model_ty
     pred_fig.update_layout(
         template='plotly_dark',
         paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-        margin=dict(l=0, r=0, t=30, b=0),
-        legend=dict(orientation='h', y=1.1),
-        xaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='Fecha'),
+        margin=dict(l=0, r=0, t=40, b=0),
+        legend=dict(orientation='h', y=1.15),
+        xaxis=dict(
+            gridcolor='rgba(255,255,255,0.1)', 
+            title='Fecha',
+            rangeslider=dict(visible=True, bgcolor='rgba(26,26,46,0.5)', thickness=0.05),
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1, label="1A", step="year", stepmode="backward"),
+                    dict(count=2, label="2A", step="year", stepmode="backward"),
+                    dict(count=3, label="3A", step="year", stepmode="backward"),
+                    dict(count=5, label="5A", step="year", stepmode="backward"),
+                    dict(step="all", label="Todo")
+                ]),
+                bgcolor='rgba(26,26,46,0.8)',
+                activecolor='#6366f1',
+                bordercolor='#2d2d44',
+                font=dict(color='#e2e8f0', size=11),
+                x=0, y=1.08
+            )
+        ),
         yaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='USD/MWh')
     )
     
