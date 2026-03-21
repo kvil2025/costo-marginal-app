@@ -529,6 +529,120 @@ app.layout = dbc.Container(fluid=True, style={'backgroundColor': COLORS['backgro
         ])
     ]),
     
+    # === ANÁLISIS INTER-BARRA ===
+    html.Div(style={'marginTop': '30px'}, children=[
+        dbc.Row([
+            dbc.Col([
+                html.Div(style={
+                    'borderTop': f'2px solid {COLORS["primary"]}',
+                    'paddingTop': '20px',
+                    'marginBottom': '20px'
+                }, children=[
+                    html.H3("🔬 Análisis Inter-Barra del SEN", style={
+                        'background': f'linear-gradient(135deg, {COLORS["secondary"]}, {COLORS["accent"]})',
+                        '-webkit-background-clip': 'text',
+                        '-webkit-text-fill-color': 'transparent',
+                        'fontWeight': '700',
+                        'fontSize': '1.6rem'
+                    }),
+                    html.P("Spread Detector • Correlación • Detección de Anomalías", 
+                           style={'color': COLORS['text_muted'], 'fontSize': '0.9rem'})
+                ])
+            ])
+        ]),
+        
+        # Spread Detector Controls
+        dbc.Row([
+            dbc.Col([
+                html.Div(style=CARD_STYLE, children=[
+                    html.H5("📡 Spread Detector — Diferencial Inter-Barra", className="section-title"),
+                    dbc.Row([
+                        dbc.Col([
+                            html.Label("Barra A (Referencia Norte):", style={'color': COLORS['text'], 'fontSize': '0.85rem'}),
+                            dcc.Dropdown(
+                                id='spread-bar-a',
+                                options=bar_options,
+                                value='crucero_220' if 'crucero_220' in loaded_bars else (bar_options[0]['value'] if bar_options else None),
+                                clearable=False,
+                                style={'backgroundColor': COLORS['card']}
+                            )
+                        ], md=4),
+                        dbc.Col([
+                            html.Label("Barra B (Referencia Sur):", style={'color': COLORS['text'], 'fontSize': '0.85rem'}),
+                            dcc.Dropdown(
+                                id='spread-bar-b',
+                                options=bar_options,
+                                value='charrua_500' if 'charrua_500' in loaded_bars else (bar_options[-1]['value'] if bar_options else None),
+                                clearable=False,
+                                style={'backgroundColor': COLORS['card']}
+                            )
+                        ], md=4),
+                        dbc.Col([
+                            html.Label("Resolución:", style={'color': COLORS['text'], 'fontSize': '0.85rem'}),
+                            dcc.Dropdown(
+                                id='spread-resolution',
+                                options=[
+                                    {'label': 'Horaria', 'value': 'H'},
+                                    {'label': 'Diaria', 'value': 'D'},
+                                    {'label': 'Semanal', 'value': 'W'},
+                                    {'label': 'Mensual', 'value': 'M'},
+                                ],
+                                value='D',
+                                clearable=False,
+                                style={'backgroundColor': COLORS['card']}
+                            )
+                        ], md=2),
+                        dbc.Col([
+                            html.Label("\u00a0", style={'fontSize': '0.85rem'}),
+                            html.Button("📡 Analizar Spread", id='analyze-spread-btn', className="btn-gradient",
+                                       style={'width': '100%', 'background': f'linear-gradient(135deg, {COLORS["accent"]}, #e879f9)'})
+                        ], md=2)
+                    ])
+                ])
+            ])
+        ]),
+        
+        # Spread Chart + Anomaly KPIs
+        dcc.Loading(id="loading-spread", type="circle", color=COLORS['accent'], children=[
+            dbc.Row([
+                dbc.Col([
+                    html.Div(style=CARD_STYLE, children=[
+                        html.H5(id='spread-chart-title', children="📈 Spread (A − B)", className="section-title"),
+                        dcc.Graph(id='spread-plot', style={'height': '400px'},
+                                 config={'displayModeBar': True, 'displaylogo': False})
+                    ])
+                ], md=8),
+                dbc.Col([
+                    html.Div(style=CARD_STYLE, children=[
+                        html.H5("⚠️ Detección de Anomalías", className="section-title"),
+                        html.Div(id='anomaly-summary', children=[
+                            html.P("Ejecuta el análisis de spread para detectar desacoples.", 
+                                   style={'color': COLORS['text_muted'], 'fontSize': '0.85rem', 'paddingTop': '20px'})
+                        ])
+                    ])
+                ], md=4)
+            ]),
+            
+            # Correlation Heatmap
+            dbc.Row([
+                dbc.Col([
+                    html.Div(style=CARD_STYLE, children=[
+                        html.H5("🔥 Mapa de Correlación entre Barras", className="section-title"),
+                        dcc.Graph(id='correlation-heatmap', style={'height': '450px'},
+                                 config={'displayModeBar': False})
+                    ])
+                ], md=7),
+                dbc.Col([
+                    html.Div(style=CARD_STYLE, children=[
+                        html.H5("📊 Ranking de Volatilidad", className="section-title"),
+                        dcc.Graph(id='volatility-ranking', style={'height': '450px'},
+                                 config={'displayModeBar': False})
+                    ])
+                ], md=5)
+            ])
+        ])
+    ]),
+    
     # Stores
     dcc.Store(id='stored-data'),
     dcc.Store(id='prediction-data'),
@@ -1083,6 +1197,233 @@ def create_empty_figure(message: str) -> go.Figure:
 
 # Expose Flask server for gunicorn (Cloud Run)
 server = app.server
+
+
+# --- Spread Detector Callback ---
+@app.callback(
+    [Output('spread-plot', 'figure'),
+     Output('anomaly-summary', 'children'),
+     Output('spread-chart-title', 'children'),
+     Output('correlation-heatmap', 'figure'),
+     Output('volatility-ranking', 'figure')],
+    [Input('analyze-spread-btn', 'n_clicks')],
+    [State('spread-bar-a', 'value'),
+     State('spread-bar-b', 'value'),
+     State('spread-resolution', 'value')],
+    prevent_initial_call=True
+)
+def analyze_spread(n_clicks, bar_a, bar_b, resolution):
+    if not bar_a or not bar_b or bar_a not in loaded_bars or bar_b not in loaded_bars:
+        empty = create_empty_figure("Selecciona dos barras válidas")
+        return empty, "Selecciona dos barras válidas", "📈 Spread (A − B)", empty, empty
+    
+    # --- 1. Spread Detector ---
+    df_a = loaded_bars[bar_a].copy()
+    df_b = loaded_bars[bar_b].copy()
+    
+    # Normalize cost column
+    for df in [df_a, df_b]:
+        if 'costo_usd' in df.columns:
+            df['costo_marginal'] = pd.to_numeric(df['costo_usd'], errors='coerce')
+        else:
+            df['costo_marginal'] = pd.to_numeric(df['costo_marginal'].astype(str).str.replace(',', '.'), errors='coerce')
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+    
+    # Resample to selected resolution
+    ts_a = df_a.set_index('timestamp').resample(resolution)['costo_marginal'].mean().reset_index()
+    ts_b = df_b.set_index('timestamp').resample(resolution)['costo_marginal'].mean().reset_index()
+    
+    # Merge on timestamp
+    merged = ts_a.merge(ts_b, on='timestamp', suffixes=('_a', '_b'), how='inner')
+    merged['spread'] = merged['costo_marginal_a'] - merged['costo_marginal_b']
+    merged['spread_abs'] = merged['spread'].abs()
+    
+    # Anomaly detection (> 2 standard deviations)
+    spread_mean = merged['spread'].mean()
+    spread_std = merged['spread'].std()
+    threshold_high = spread_mean + 2 * spread_std
+    threshold_low = spread_mean - 2 * spread_std
+    merged['is_anomaly'] = (merged['spread'] > threshold_high) | (merged['spread'] < threshold_low)
+    anomalies = merged[merged['is_anomaly']]
+    
+    info_a = BARRAS_INFO.get(bar_a, {})
+    info_b = BARRAS_INFO.get(bar_b, {})
+    color_a = info_a.get('color', COLORS['primary'])
+    color_b = info_b.get('color', COLORS['secondary'])
+    
+    # Build spread chart
+    spread_fig = go.Figure()
+    
+    # Spread line
+    spread_fig.add_trace(go.Scatter(
+        x=merged['timestamp'], y=merged['spread'],
+        mode='lines', name='Spread (A−B)',
+        line=dict(width=1.5),
+        fill='tozeroy',
+        fillcolor='rgba(99, 102, 241, 0.1)'
+    ))
+    
+    # Moving average of spread
+    merged['spread_ma'] = merged['spread'].rolling(window=min(30, len(merged)//4 + 1)).mean()
+    spread_fig.add_trace(go.Scatter(
+        x=merged['timestamp'], y=merged['spread_ma'],
+        mode='lines', name='Tendencia Spread',
+        line=dict(color=COLORS['accent'], width=2)
+    ))
+    
+    # Threshold bands
+    spread_fig.add_hline(y=threshold_high, line_dash="dash", line_color="rgba(239, 68, 68, 0.5)",
+                         annotation_text=f"+2σ ({threshold_high:.1f})")
+    spread_fig.add_hline(y=threshold_low, line_dash="dash", line_color="rgba(239, 68, 68, 0.5)",
+                         annotation_text=f"-2σ ({threshold_low:.1f})")
+    spread_fig.add_hline(y=0, line_dash="dot", line_color="rgba(255,255,255,0.3)")
+    
+    # Anomaly markers
+    if len(anomalies) > 0:
+        spread_fig.add_trace(go.Scatter(
+            x=anomalies['timestamp'], y=anomalies['spread'],
+            mode='markers', name=f'Anomalías ({len(anomalies)})',
+            marker=dict(color='#ef4444', size=8, symbol='diamond',
+                       line=dict(width=1, color='white'))
+        ))
+    
+    spread_fig.update_layout(
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=0, t=40, b=0),
+        legend=dict(orientation='h', y=1.15),
+        xaxis=dict(gridcolor='rgba(255,255,255,0.1)',
+                   rangeslider=dict(visible=True, bgcolor='rgba(26,26,46,0.5)', thickness=0.05)),
+        yaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='USD/MWh (Diferencial)')
+    )
+    
+    # --- 2. Anomaly Summary ---
+    anomaly_children = []
+    
+    # KPI cards for anomaly stats
+    pct_anomaly = (len(anomalies) / len(merged)) * 100 if len(merged) > 0 else 0
+    max_spread = merged['spread'].max()
+    min_spread = merged['spread'].min()
+    max_spread_date = merged.loc[merged['spread'].idxmax(), 'timestamp'] if len(merged) > 0 else None
+    
+    anomaly_children.append(html.Div([
+        html.Div([
+            html.Div(f"{len(anomalies)}", style={'fontSize': '1.8rem', 'fontWeight': '700', 'color': '#ef4444'}),
+            html.Div("Anomalías Detectadas", style={'fontSize': '0.7rem', 'color': COLORS['text_muted'], 'textTransform': 'uppercase'})
+        ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(239,68,68,0.1)', 'borderRadius': '8px', 'marginBottom': '10px'}),
+        
+        html.Div([
+            html.Div(f"{pct_anomaly:.1f}%", style={'fontSize': '1.3rem', 'fontWeight': '600', 'color': COLORS['warning']}),
+            html.Div("del total de datos", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+        ], style={'textAlign': 'center', 'padding': '8px', 'background': 'rgba(245,158,11,0.1)', 'borderRadius': '8px', 'marginBottom': '10px'}),
+        
+        html.Hr(style={'borderColor': COLORS['card_border']}),
+        
+        html.Div([
+            html.Div("Spread Máximo", style={'fontSize': '0.7rem', 'color': COLORS['text_muted'], 'textTransform': 'uppercase'}),
+            html.Div(f"${max_spread:.1f}/MWh", style={'fontSize': '1rem', 'fontWeight': '600', 'color': '#ef4444'}),
+            html.Div(f"{max_spread_date.strftime('%d/%m/%Y') if max_spread_date else 'N/A'}", 
+                     style={'fontSize': '0.75rem', 'color': COLORS['text_muted']})
+        ], style={'marginBottom': '8px'}),
+        
+        html.Div([
+            html.Div("Spread Mínimo", style={'fontSize': '0.7rem', 'color': COLORS['text_muted'], 'textTransform': 'uppercase'}),
+            html.Div(f"${min_spread:.1f}/MWh", style={'fontSize': '1rem', 'fontWeight': '600', 'color': COLORS['secondary']}),
+        ], style={'marginBottom': '8px'}),
+        
+        html.Div([
+            html.Div("Promedio ± σ", style={'fontSize': '0.7rem', 'color': COLORS['text_muted'], 'textTransform': 'uppercase'}),
+            html.Div(f"${spread_mean:.1f} ± ${spread_std:.1f}", 
+                     style={'fontSize': '1rem', 'fontWeight': '600', 'color': COLORS['primary']}),
+        ]),
+    ]))
+    
+    # --- 3. Correlation Heatmap ---
+    # Build daily average price matrix for all bars
+    price_matrix = {}
+    for bid, bdf in loaded_bars.items():
+        tmp = bdf.copy()
+        tmp['timestamp'] = pd.to_datetime(tmp['timestamp'])
+        if 'costo_usd' in tmp.columns:
+            tmp['price'] = pd.to_numeric(tmp['costo_usd'], errors='coerce')
+        else:
+            tmp['price'] = pd.to_numeric(tmp['costo_marginal'].astype(str).str.replace(',', '.'), errors='coerce')
+        daily = tmp.set_index('timestamp').resample('D')['price'].mean()
+        binfo = BARRAS_INFO.get(bid, {})
+        short_name = binfo.get('zona', bid.replace('_', ' ').title())
+        price_matrix[short_name] = daily
+    
+    price_df = pd.DataFrame(price_matrix).dropna()
+    
+    if len(price_df.columns) >= 2:
+        corr = price_df.corr()
+        
+        heatmap_fig = go.Figure(data=go.Heatmap(
+            z=corr.values,
+            x=corr.columns,
+            y=corr.index,
+            colorscale=[[0, '#ef4444'], [0.5, '#1a1a2e'], [1, '#6366f1']],
+            zmid=0.85,
+            text=[[f'{v:.2f}' for v in row] for row in corr.values],
+            texttemplate='%{text}',
+            textfont=dict(size=10, color='white'),
+            hovertemplate='%{x} vs %{y}<br>Correlación: %{z:.3f}<extra></extra>'
+        ))
+        heatmap_fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=0, r=0, t=10, b=0),
+            xaxis=dict(tickfont=dict(size=9)),
+            yaxis=dict(tickfont=dict(size=9))
+        )
+    else:
+        heatmap_fig = create_empty_figure("Necesita al menos 2 barras cargadas")
+    
+    # --- 4. Volatility Ranking ---
+    vol_data = []
+    for bid, bdf in loaded_bars.items():
+        tmp = bdf.copy()
+        if 'costo_usd' in tmp.columns:
+            prices = pd.to_numeric(tmp['costo_usd'], errors='coerce')
+        else:
+            prices = pd.to_numeric(tmp['costo_marginal'].astype(str).str.replace(',', '.'), errors='coerce')
+        avg = prices.mean()
+        vol = (prices.std() / max(avg, 0.01)) * 100
+        binfo = BARRAS_INFO.get(bid, {})
+        vol_data.append({
+            'barra': binfo.get('zona', bid),
+            'volatilidad': vol,
+            'color': binfo.get('color', COLORS['primary'])
+        })
+    
+    vol_df = pd.DataFrame(vol_data).sort_values('volatilidad', ascending=True)
+    
+    vol_fig = go.Figure()
+    vol_fig.add_trace(go.Bar(
+        x=vol_df['volatilidad'],
+        y=vol_df['barra'],
+        orientation='h',
+        marker_color=vol_df['color'].tolist(),
+        text=[f'{v:.1f}%' for v in vol_df['volatilidad']],
+        textposition='outside',
+        textfont=dict(color=COLORS['text'], size=11)
+    ))
+    vol_fig.update_layout(
+        template='plotly_dark',
+        paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=0, r=50, t=10, b=0),
+        xaxis=dict(gridcolor='rgba(255,255,255,0.1)', title='Volatilidad (CV %)', range=[0, vol_df['volatilidad'].max() * 1.3]),
+        yaxis=dict(gridcolor='rgba(255,255,255,0.1)')
+    )
+    
+    # Title
+    name_a = info_a.get('zona', bar_a)
+    name_b = info_b.get('zona', bar_b)
+    title = f"📈 Spread: {name_a} → {name_b} | {len(merged):,} puntos | {len(anomalies)} anomalías"
+    
+    return spread_fig, anomaly_children, title, heatmap_fig, vol_fig
+
+
 
 
 if __name__ == '__main__':
