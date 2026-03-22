@@ -1,0 +1,121 @@
+0,1,2
+CENTRAL (≥100 MW),Disponibilidad (%),Observaciones
+,,"Limitada. Causa informada: Producto de los trabajos de Desrripiado realizados en bocatoma Polcura, se aumenta el volumen de regulación,"
+,,"el nuevo rango de operación de la bocatoma fluctuará entre las cotas 731,50 y 736,00 m.s.n.m. según IL 2025001890. Y Debido al inicio de la"
+HE Antuco,100.00 %,
+,,"temporada de riego 2025 - 2026, la central Antuco deberá generar en forma constante todo el caudal afluente natural más el caudal que la"
+,,"DOH solicite turbinar por la central El Toro, con la finalidad de cumplir requerimientos de riego, según IL 2025002753."
+,,"Laguna Invernada limitada. Causa informada: De acuerdo a convenio de riego de la Laguna Maule de 1947, en temporada de riego y cuando"
+,,"el río Maule en Armerillo se encuentra deficitario (actual escenario) se debe al menos generar el caudal afluente a la laguna La Invernada, lo"
+HE Cipreses,69.00 %,
+,,"que implica no embalsar, la cota se ha fijado en la 1315.21 msnm, como cota objetivo semanal en la laguna invernada de lunes a lunes,"
+,,según IL 2025002923.
+,,"Limitada. Causa informada: Producto de las menores filtraciones obtenidas desde el embalse Colbún, debido a la actual disminución de la"
+,,"cota del mismo, el Embalse se verá imposibilitado para cumplir con la totalidad de la dotación de riego del Canal Maule Sur y Taco General"
+,,"con la generación de Central Chiburgo, poniendo en riesgo la capacidad de cumplimiento de las entregas a riego para el resto del periodo"
+,,"(abril 2026). Para poder asegurar este cumplimiento legal de dotación de riego mencionada, se requiere mantener la cota del Embalse"
+,,"Colbún por sobre el nivel 420,50 m.s.n.m., según IL 2026000558. // Limitado a prestar SSCC en forma simultánea ambas unidades. Causa"
+HE Colbún,100.00 %,
+,,"informada: Entre las cotas 420 y 418 m.s.n.m. Las tomas de carga deben ser secuencial, de modo que al efectuar el aumento de generación"
+,,"debe ser con una de las unidades y la otra detenida, o bien enclavada en una potencia fija. Esta condición podrá cumplirse cualquiera sea la"
+,,"magnitud de la toma de carga y su grado de rapidez. En esta condición la segunda unidad puede, en caso de que se requiera, prestar"
+,,"servicios complementarios de frecuencia en modo control primario de frecuencia, control secundario de frecuencia (AGC) y control terciario"
+,,"de frecuencia, según IL 2026000615."
+,,Limitada. Causa informada: Sin prestar servicio de AGC por difícil forma de sostener los sistemas hidro-mecánicos que regulan la
+,,"generación , según IL 2021001180. Y Durante el periodo de riego, Central El Toro podrá variar su potencia activa si se cumplen las siguientes"
+,,"condiciones: 1.- Que las variaciones de generación en la Central El Toro sean compensadas de manera tal que, al final de cada día, el"
+,,"volumen total de agua extraída desde el embalse Laja sea el mismo que el volumen total de agua solicitada por la DOH, como tasa de"
+,,"extracción, para ese día. O, dicho de otra manera, que la tasa de extracción promedio diaria coincida con la tasa de extracción solicitada por"
+HE El Toro,100.00 %,la DOH para cada día. 2.- Que las variaciones de generación en la Central El Toro sean administradas de manera tal que durante todo
+,,"momento la generación de central Antuco se mantenga constante, con una generación equivalente a las extracciones de riego solicitada por"
+,,"la DOH más la hoya intermedia, lo anterior, mediante la adecuada utilización de la bocatoma Polcura. Dado lo anterior, Central El Toro podrá"
+,,"colaborar en control primario de frecuencia (CPF) del Sistema Eléctrico. 3.- Considerar para el propósito anterior , un nivel en bocatoma"
+,,"Polcura que fluctúe entre las cotas 731,50 y 736,00 m.s.n.m. de manera de disponer de una banda adecuada para reaccionar a las variaciones"
+,,"potenciales producto del CPF, según IL 2025002754."
+,,"De acuerdo con el marco operativo global de la Central Los Cóndores, todas las variaciones en el caudal son determinadas por la Dirección"
+,,"de Obras Hidráulicas (DOH), previa solicitud de la Junta de Vigilancia del Río Maule o, en su caso, por la generación. En consecuencia, las"
+,,"extracciones de agua de la Laguna del Maule deben realizarse preferentemente desde la Central Los Cóndores, de acuerdo con los"
+HE Los Cóndores,100.00 %,
+,,principios de uso eficiente del recurso hídrico. Cabe destacar que tanto los ajustes operativos de la Central Los Cóndores como las
+,,"compuertas de extracción de la Laguna del Maule están bajo el control y supervisión directa de la DOH, lo que impide que la central pueda"
+,,"modular su generación de manera autónoma, según IL 2025000512."
+,,"U-2 con limitación. Causa informada: Dada las actuales condiciones hídricas en la cuenca del Biobío, lo que mantiene caudales afluentes"
+,,"bajos para la temporada hacia al embalse Ralco, Unidad N°2 de Central Pangue podrá operar excepcional y transitoriamente por debajo de"
+,,su límite técnico declarado. Para lo anterior la Unidad N°2 podrá ser despachada según lo siguiente: En todo horario podrá generar a una
+,,potencia mínima de 15MW con unidad enclavada para cumplir con caudal mínimo de 40 m3/s en el sector de junta de Rio Bío-bío y Rio
+HE Pangue,50.00 %,
+,,"Pangue. Además, se debe respetar en todo momento un caudal mínimo de 40 m3/s. Las tasas de toma de carga son las siguientes: 15 MW a"
+,,"300 MW: subir 50 MW cada una hora, equivalentes a 10 MW cada 12 minutos, de 300 MW a 467 MW: subir 100 MW cada una hora,"
+,,"equivalentes a 25 MW cada 15 minutos. Además, la Central podrá aportar potencia activa en caso de emergencia en el SEN, según IL"
+,,2026000026.
+,,"C. Pehuenche limitado. Causa informada: Para abastecer los derechos de riego del canal Maule Norte Bajo desde el embalse Colbún, dada"
+,,"su cota actual, estos deben ser abastecidos, ya sea por la descarga de la C. Pehuenche o a través de las compuertas de la bocatoma Maule"
+,,"Pehuenche, sin embargo, existe un desfase de 6,5 horas desde que las compuertas de la bocatoma se abren hasta que el agua llega"
+,,efectivamente al canal Maule Norte Alto. La apertura y cierre de la bocatoma se planifica considerando el programa de operación vigente
+HE Pehuenche,50.00 %,"publicado por el Coordinador, de manera de cumplir tanto con el programa de generación de C. Pehuenche como con el abastecimiento de"
+,,"riego, minimizando los vertimientos innecesarios en la bocatoma. Por lo tanto, si el Coordinador solicita el retiro anticipado de C. Pehuenche"
+,,"(retiro de ambas unidades), respecto al programa, este debe ser solicitado con al menos 6,5 horas de antelación. Considerar además que el"
+,,"tiempo de corte efectivo del caudal tras el cierre de las compuertas es 3 horas, por lo tanto, al menos una unidad de la central deberá partir"
+,,"no más allá de 3 horas después del cierre de las compuertas, previa coordinación con el CEN, según IL 2026000596."
+,,U-1 limitada. Causa informada: Se requiere mantener unidad 1 en servicio siempre que el sistema lo requiera. Existe condición técnica de
+,,válvula protección turbina la cual se encuentra trabajando en forma deficiente y por recomendación se indica disminuir los movimientos de
+,,apertura y cierre de dicha válvula y así evitar la degradación acelerada y una indisponibilidad de la unidad por un tiempo prolongado. En
+HE Ralco,100.00 %,"caso de que programa de generación requiera una sola Unidad en servicio permanente, priorizar despacho de unidad N° 1. En caso de que"
+,,"programa de generación requiera una sola Unidad y no de forma permanente, priorizar despacho de unidad N° 2. En caso de que programa"
+,,"de generación requiera ambas unidades en servicio y por condiciones de sistema se deba detener una de las unidades, priorizar detención"
+,,"de unidad N° 2, según IL 2025002207."
+,,"U-3 y U-4 con limitación. Causa informada: Nuevo MT de 25 MW esto hasta la realización de las pruebas de verificación. además, el servicio"
+HE Rapel,100.00 %,
+,,"complementario de AGC deberá operar entre los rangos 35 MW y plena carga, según IL 2025002355 y 2025002356."
+,,"No se puede retirar completamente de servicio, para alimentar cliente externo Frontel, que alimenta la zona de Antuco, Abanico y lago Laja,"
+HP Abanico,89.00 %,
+,,"como tambén alimenta los SS/AA de central El Toro y respalda SS/AA de la central Antuco, según IL 2025002414"
+,,"Limitada no pueden ser sujetas a reducción de generación (curtailment) y no podrán participar de la prestación de SSCC, debido a que"
+HP Alfalfal,100.00 %,"dichas acciones provocan movimientos de caudales y golpes de agua no planificados que pueden afectar a otros usuarios del río, según IL"
+,,2024000725.
+,,Dado que la central Chacayes se encuentra en la cuenca del río Cachapoal aguas arriba de las obras de toma de la Central Sauzal y de los
+,,"regantes de la Junta de Vigilancia del mismo río, se requiere que la central quede excluida del prorrateo de generación en atención a lo"
+,,"siguiente: Cuando se prorratea la generación en Chacayes, se debe verter caudal en la bocatoma, la cual se encuentra 12 km aguas arriba de"
+HP Chacayes,100.00 %,"la central, por lo tanto, se produce un desfase de 2 a 3 horas, entre el momento en que se baja la generación y el momento en que se"
+,,"recupera el caudal normal del río, lo que afecta significativamente el programa de riego de los regantes, quienes no pueden captar todo su"
+,,"derecho durante las horas de desfase, lo cual es particularmente crítico para su regulación de sus compuertas. Esta limitación si afectara a"
+,,"CTF, según IL 2026000063"
+,,Limitada. Causa informada:No participa en la prorrata generalizada. La disminución de carga por prorrata tiene como consecuencia
+,,desbordamiento en los reservorios Tinguiririca y Tricahue por altos caudales entrantes. El desbordamiento puede poner en peligro la vida y
+HP La Confluencia,100.00 %,
+,,seguridad de terceros que transitan por la ruta I-45. Alto tránsito de turistas. Exceso de caudal vertido puede socavar puentes y badenes de
+,,"la ruta I-45, según IL 2025002831."
+,,Limitada. Causa informada: No participa en la prorrata generalizada. La disminución de carga por prorrata tiene como consecuencia
+,,desbordamiento en los reservorios Tinguiririca y Tricahue por altos caudales entrantes. El desbordamiento puede poner en peligro la vida y
+HP La Higuera,100.00 %,
+,,seguridad de terceros que transitan por la ruta I-45. Alto tránsito de turistas. Exceso de caudal vertido puede socavar puentes y badenes de
+,,"la ruta I-45, según IL 2025002830."
+,,"Limitada. Causa informada: No puede prestar CPF, se debe ajustar el parámetro de potencia base para cumplir con la NTSyCS, según IL"
+PE Calama,100.00 %,
+,,2025002159.
+PE Horizonte Norte,100.00 %,"Limitado para prestar CSF. Causa informada: Anormalidad sistema de comunicaciones, según IL 2025003177."
+,,Limitada para prestar CSF. Causa informada: Se genera Limitación al control de ACG debido a que no sigue la consigna indicada por el
+PE Horizonte Sur,100.00 %,
+,,"Coordinador, según IL 2025002966."
+,,"Solo puede prestar CSF con la condición de no ajustar consignas menores al mínimo técnico provisorio de 19,32 MW, según IL 2025000122."
+PE San Juan,100.00 %,
+,,"Mínimo Técnico provisorio de 19,32 MW, según IL 2025000121."
+,,"Limitada a variar reactivos. Causa informada: Parque Eólico con limitación para absorber o inyectar Potencia Reactiva, debido a falla en"
+PE Sierra Gorda Este,100.00 %,
+,,"Controlador de cambiador de tap del transformador de poder en S/E El Arriero, según IL 2025000784."
+,,Limitada a prestar control primario de frecuencia debido a comportamiento anormal de la central durante la habilitación del CPF. Los demás
+PFV CEME 1,100.00 %,"servicios complementarios, tales como CTF y CT, no se ven afectados, por lo que permanecen disponibles y a disposición del CEN, según IL"
+,,2026000459
+,,"Limitada a prestar SSCC de CPF. Causa informada: Debido a bloqueo del sistema Under/Over Frecuency a nivel de SW del PPC, se informa la"
+PFV Guanchoi,100.00 %,
+,,"imposibilidad de disponer la función de SSCC CPF, según IL 2025002611."
+,,Indisponible para prestar SSCC control de tensión. Causa informada: Problema con controlador permite la modificación solo de potencia
+PFV San Pedro,100.00 %,
+,,"activa, según IL 2026000539."
+,,Indisponible para prestar SSCC de control de tensión horario nocturno. Causa informada: Central no puede prestar servicio de control de
+PFV Taira,100.00 %,
+,,"tensión en horario nocturno por causas que se investigan, según IL 2026000244."
+PFV Valle Escondido,98.00 %,"Señal de potencia de disponibilidad con data errónea, según IL 2025003027"
+PFV Willka,100.00 %,"Limitación al control de tensión durante horario nocturno, según IL 2026000037."
+TER Angamos-ANG1,100.00 %,"Limitada para prestar servicios complementarios de CPF debido a la necesidad de mejoras en los sistemas de control, según IL 2023001864."
+TER Angamos-ANG2,100.00 %,"Limitada para prestar servicios complementarios de CPF debido a la necesidad de mejoras en los sistemas de control, según IL 2024000416."

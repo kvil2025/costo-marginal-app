@@ -1,0 +1,98 @@
+0,1,2
+,,ANTECEDENTES DE LA OPERACIÓN DIARIA SEN
+4.1 Observaciones,,
+Hora,Centro de Control,Observación
+,,"Cs. PE Ckhuri, PFV Loma Los Colorados, PE Lebu (Ampliación de 6,5 a 10 MW), Dos Valles, El Pinar U-1, PE Antofagasta, BESS Bolero, PFV Andes III, BESS"
+00:00,CDC,"Andes III y PFV Víctor Jara y BESS Víctor Jara, PFV Estepa Solar, BESS Estepa Solar, BESS Huatacondo, PFV Gabriela, BESS Gabriela, BESS Arena y BESS"
+,,"Libélula, continúan en período de puesta en servicio."
+00:00,Colbún,C. Colbún se declara en condición de agotamiento con una cota de 420.18 m.s.n.m. y un gasto de 153 MWh.
+00:00,Enel Generación,C. Rapel se declara en condición de agotamiento con una cota de 103.34 m.s.n.m. y un gasto de 2 MWh.
+,,"C. Los Vientos con limitación. Causa informada: Sin disponibilidad de gas GN_A por encontrarse programada fuera del horario de renominación, según IL"
+00:00,Gen. Metropolitana,
+,,2026000653.
+00:09,RNE,"C. Nueva Ventanas sin limitación a participar en el CSF, cancelada IL 2026000652"
+00:18,STS,S/E Castro transformador 1 de 115/24 kV y 16 MVA cancelada solicitud de intervención de curso forzoso. Cancela SICF 2026026548.
+,,C. Santa María limitada a 160 MW con solicitud de intervención de curso forzoso. Causa informada: Se requiere limitar la Unidad en 160 MW por falla en
+01:48,Colbún,
+,,"válvula de relleno de agua al condensador, según SICF 2026027576."
+03:01,Enor Chile,"C. PFV Quilmo indisponible, según IF 2026001704."
+,,"S/E Montenegro Barra de 66 kV interrupción forzada por protecciones, se pierden 9 MW de consumos correspondientes a SS/EE Monte Negro, Lucero,"
+03:01,STS,
+,,"Larqui, Quilmo y Quilmo II, según IF 2026001687."
+,,"S/E Chillán interruptor 52B3 de línea de 66 kV Chillán - Lucero cerrado, se recuperan los consumos correspondientes a SS/EE Lucero, Larqui, Quilmo y"
+03:06,CGE - Transmisión,
+,,"Quilmo II,"
+03:15,STS,S/E Montenegro Alimentador San Ignacio ( Frontel ) normalizados consumos por red de MT.
+05:00,Copelec,"S/E Montenegro Alimentador Contón normalizado consumos por red de MT, quedando el 100 % de los consumos normalizados."
+05:03,Colbún,"C. PE San Juan limitado en 173 MW. Causa informada: Falla en los circuitos de los alimentadores 52A2 y 52 A4, según IL 2026000654."
+06:00,Gen. Metropolitana,"C. Los Vientos sin limitación, cancelada IL 2026000653."
+,,C. Nueva Renca limitada. Causa informada: Disponibilidad de combustible de gas argentino (Interrumpible) GN_B de 0 m3 desde las 06:00 hrs del día
+06:00,Gen. Metropolitana,
+,,"operativo gas 17/12/2026 (hasta las 5:59 hrs del 18/03/2026) debido a no confirmación del proveedor, según IL 2026000651. Cancelada 2026000637."
+,,"S/E Charrúa interruptor 52B6 de la línea de 66 kV Charrúa - Chillán, tramo Charrúa - Lucero interrupción forzada por protecciones con reconexión"
+06:02,CGE - Transmisión,
+,,"automática con éxito, según IF 2026001691."
+,,Línea de 110 kV Huasco - Maitencillo 2 con solicitud de desconexión de curso forzoso. Causa informada: Atención de falla debido a corte de conductor en
+06:10,Transelec,
+,,"estructuras N°6 y N°7 (IF2026001690), según SDCF 2026027577."
+,,"S/E Montenegro paño AT1 y BT1 con limitación. Causa informada: Bloqueada función 50BF del Paño AT1 y BT1 en S/E Montenegro (Sistema 1 y 2), como"
+06:17,STS,
+,,"medida preventiva mientras se realiza la investigación (Asociada al IF 2026001687), según IL 2026000656 - 2026000657."
+06:17,STS,S/E Montenegro Barra de 66 kV energizada en vacío. Cancelado IF 2026001687.
+,,Línea de 500 kV Nueva Pan de Azúcar – Polpaico 1 con solicitud de intervención de curso forzoso. Causa informada: Para realizar trabajos de cambio y
+06:44,Interchile,
+,,"ajuste en espaciadores amortiguadores relacionados con mantenimiento en circuito 2, según SDCF 2026025690."
+,,Línea de 500 kV Nueva Pan de Azúcar – Polpaico 2 con solicitud de desconexión de curso forzoso. Causa informada: Para realizar trabajos de cambio y
+06:44,Interchile,"ajuste en espaciadores amortiguadores relacionados con mantenimiento, según SDCF 2026025689. (Trabajos impostergable según lo informado por el CC"
+,,Interchile).
+07:40,Engie Generación,"C. PFV Pampa Camarones disponible y en servicio, cancelado IF 2026001680."
+,,S/E Victoria interruptor B3 con solicitud de desconexión de curso forzoso. Causa informada: Trabajos de movimiento de equipamiento que está bajo (y muy
+10:19,CGE - Transmisión,
+,,"cercanos), a sus líneas de 66 kV. Para realizar esta maniobra se debe bloquear la reconexión del interruptor 52B4 de S/E Victoria, según SDCF 2026027621."
+,,S/E Armerillo T1 220/66/23 kV 70 MVA con solicitud de desconexión de curso forzoso. Causa informada: Investigación de operación de fusibles en la S/E
+10:26,Celeoredes,
+,,"Unitaria de 23 kV. La cual tiene en este momento los SSAA alimentados desde el grupo electrógeno, según SDCF 2026027587."
+,,Línea de 66 kV Villarrica - Pucón con solicitud de intervención de curso forzoso. Causa informada: A Solicitud de CGED por riesgo a la continuidad del
+10:40,CGE - Transmisión,
+,,"suministro, se requiere poda de emergencia en sus redes, según SICF 2026027632."
+10:40,Enor Chile,"C. PFV Quilmo disponible, cancelado IF 2026001704."
+10:51,AES Andes,"C. Angamos ANG1 se limita en 120 MW con solicitud de intervención de curso forzoso. Causa informada: Reparación atomizador, según SICF 2026027635."
+,,"C. Nueva Renca limitada. Causa informada: Disponibilidad de combustible GN_A de 1.400.000 m3 por no disponibilidad de gas IT, desde las 11:00 hrs del"
+11:00,Gen. Metropolitana,
+,,"DO 17/03/2026 hasta las 06:00 hrs del DO 18/03/2026, según IL 2026000655."
+,,"S/E La Cebada Paño J4 con solicitud de intervención de curso forzoso. Causa informada: Relleno de gas SF6 por alarma de baja presión, según SICF"
+11:11,AES Andes,
+,,2026027661.
+,,Línea de 66 kV San Javier - Constitución con solicitud de intervención de curso forzoso. Causa informada: Atención de condición vegetal con riesgo de
+11:20,Transelec,
+,,"acortamiento (vanos E39-E40 y E375 a E340), según SICF 2026027619 - 2026027620."
+,,C. Isla con solicitud de intervención de curso forzoso. Causa informada: Desripiado urgente en bocatoma Maule Isla por acumulación de material flotante
+11:37,Enel Generación,
+,,"en rejas, según SICF 2026027672."
+,,Línea de 66 kV Concepción - Mahns con solicitud de intervención de curso forzoso. Causa informada: Se requiere de manera urgente realizar el
+11:43,CGE - Transmisión,
+,,"mejoramiento del terreno base asociado a dicha estructura, según SICF 2026027697."
+,,S/E Maitencillo ATR2 220/110 kV de 90 MVA interrupción forzada por protecciones. Causa informada: Error operacional por trabajos asociado a la SD
+11:49,Transelec,
+,,"2026021902., según IF 2026001711."
+,,S/E Alto Maipo interruptor H7 con solicitud de intervención de curso forzoso. Causa informada: Debido a la operación de alarma en el sistema de respaldo
+,,"del Cto2 de la LT 110 kV Alto Maipo – Tap Las Lajas – Florida, asociada a la función “SRC1 VT FF OP” (función que detecta la pérdida total o parcial de"
+11:54,AES Andes,"tensión), se requiere habilitar un registro oscilográfico (COMTRADE) en el relé SP2 del cto2, para poder extraer data y tomar las acciones correctivas"
+,,"pertinentes. Cabe destacar que el bloqueo de las funciones de protecciones direccionales solo ocurre en el relé de respaldo, el relé principal no se ve"
+,,"afectada por este evento, según SICF 2026027712."
+11:58,Enel Green Power,"C. PFV Campos de Sol limitado en 360 MW. Causa informada: Amago de incendio se desconecta circuito en cabina 3, según IL 2026000658."
+,,Línea de 66 kV Constitución - San Javier con solicitud de intervención de curso forzoso. Causa informada: Bloqueo a la reconexión del 52BT1 en S/E
+12:00,Enfragen,
+,,"Central San Javier a, atención de condición vegetal por posible acortamiento de distancia, vanos 39 a 75 y otros, según SICF 2026027724"
+12:01,Enel Generación,"C. Los Cóndores U-1 sale del servicio en forma intempestiva con 16 MW. Causa informada: Intervención fortuita, según IF 2026001701."
+12:17,Enel Generación,"C. Isla cancelada solicitud de intervención de curso forzoso, según SICF 2026027672."
+12:39,San Andrés,"C. HP Palacios disponible y en servicio, cancelado IF 2026001689."
+12:56,Enel Generación,"C. Los Cóndores U-1 disponible y en servicio, cancelado, según IF 2026001701."
+13:06,GPE,C. Rio Colorado con solicitud de desconexión de curso forzoso. Causa informada: A solicitud de Celeo Redes por S/E Armerillo T1 220/66/23 kV.
+13:34,Transelec,"Línea de 110 kV Huasco - Maitencillo 2 cerrada, cancelado IF 2026001690."
+13:34,Transelec,"Línea de 110 kV Huasco - Maitencillo 2 cancelada solicitud de desconexión de curso forzoso, según SDCF 2026027577."
+14:11,Celeoredes,"S/E Armerillo T1 220/66/23 kV 70 MVA cancelada solicitud de desconexión de curso forzoso, según SDCF 2026027587."
+14:25,CGE - Transmisión,"S/E Victoria interruptor 52B3 cancelada solicitud de desconexión de curso forzoso, según SDCF 2026027621."
+,,C. PFV Campos de Sol limitado en 369 MW con solicitud de intervención de curso forzoso. Causa informada: Desconexión de cabina en circuito 4. Parque
+14:34,Enel Green Power,
+,,queda reducido en generación en 2 MW. según SICF 2026027805. Cancelada IL 2026000658.

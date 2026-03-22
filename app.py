@@ -643,10 +643,113 @@ app.layout = dbc.Container(fluid=True, style={'backgroundColor': COLORS['backgro
         ])
     ]),
     
+    # === GENERADOR DE INFORME DIARIO ===
+    html.Div(style={'marginTop': '30px'}, children=[
+        dbc.Row([
+            dbc.Col([
+                html.Div(style={
+                    'borderTop': f'2px solid {COLORS["warning"]}',
+                    'paddingTop': '20px',
+                    'marginBottom': '20px'
+                }, children=[
+                    html.H3("📋 Generador de Informe Diario — Formato CEN", style={
+                        'background': f'linear-gradient(135deg, {COLORS["warning"]}, #ef4444)',
+                        '-webkit-background-clip': 'text',
+                        '-webkit-text-fill-color': 'transparent',
+                        'fontWeight': '700',
+                        'fontSize': '1.6rem'
+                    }),
+                    html.P("Genera un informe con la misma estructura del Coordinador Eléctrico Nacional", 
+                           style={'color': COLORS['text_muted'], 'fontSize': '0.9rem'})
+                ])
+            ])
+        ]),
+        
+        # Report Controls
+        dbc.Row([
+            dbc.Col([
+                html.Div(style=CARD_STYLE, children=[
+                    dbc.Row([
+                        dbc.Col([
+                            html.Label("Fecha del Informe:", style={'color': COLORS['text'], 'fontSize': '0.85rem'}),
+                            dcc.DatePickerSingle(
+                                id='report-date',
+                                date=datetime.date.today(),
+                                display_format='DD/MM/YYYY',
+                                style={'width': '100%'}
+                            )
+                        ], md=3),
+                        dbc.Col([
+                            html.Label("Barras a incluir:", style={'color': COLORS['text'], 'fontSize': '0.85rem'}),
+                            dcc.Dropdown(
+                                id='report-bars',
+                                options=bar_options,
+                                value=[b['value'] for b in bar_options[:5]],
+                                multi=True,
+                                style={'backgroundColor': COLORS['card']}
+                            )
+                        ], md=5),
+                        dbc.Col([
+                            html.Label("Tipo de Informe:", style={'color': COLORS['text'], 'fontSize': '0.85rem'}),
+                            dcc.Dropdown(
+                                id='report-type',
+                                options=[
+                                    {'label': '📊 Completo (CEN)', 'value': 'full'},
+                                    {'label': '📈 Resumen Ejecutivo', 'value': 'executive'},
+                                    {'label': '⚠️ Solo Anomalías', 'value': 'anomalies'},
+                                ],
+                                value='full',
+                                clearable=False,
+                                style={'backgroundColor': COLORS['card']}
+                            )
+                        ], md=2),
+                        dbc.Col([
+                            html.Label("\u00a0", style={'fontSize': '0.85rem'}),
+                            html.Button("📋 Generar Informe", id='generate-report-btn', className="btn-gradient",
+                                       style={'width': '100%', 'background': f'linear-gradient(135deg, {COLORS["warning"]}, #ef4444)',
+                                              'padding': '10px', 'fontSize': '0.95rem'})
+                        ], md=2)
+                    ])
+                ])
+            ])
+        ]),
+        
+        # Report Output
+        dcc.Loading(id="loading-report", type="circle", color=COLORS['warning'], children=[
+            dbc.Row([
+                dbc.Col([
+                    html.Div(id='report-output', style={
+                        **CARD_STYLE,
+                        'minHeight': '200px',
+                        'maxHeight': '800px',
+                        'overflowY': 'auto',
+                        'borderLeft': f'4px solid {COLORS["warning"]}'
+                    }, children=[
+                        html.P("Selecciona las opciones y haz click en 'Generar Informe' para crear un reporte tipo CEN.",
+                               style={'color': COLORS['text_muted'], 'padding': '40px', 'textAlign': 'center'})
+                    ])
+                ])
+            ]),
+            
+            # Download button (hidden initially)
+            dbc.Row([
+                dbc.Col([
+                    html.Div(id='report-download-section', style={'display': 'none'}, children=[
+                        html.Button("⬇️ Descargar Informe HTML", id='download-report-btn', className="btn-gradient",
+                                   style={'margin': '10px auto', 'display': 'block',
+                                          'background': f'linear-gradient(135deg, {COLORS["accent"]}, {COLORS["secondary"]})'}),
+                        dcc.Download(id='report-download')
+                    ])
+                ], style={'textAlign': 'center'})
+            ])
+        ])
+    ]),
+    
     # Stores
     dcc.Store(id='stored-data'),
     dcc.Store(id='prediction-data'),
-    dcc.Store(id='full-data-store')  # Stores full unfiltered data for date filtering
+    dcc.Store(id='full-data-store'),  # Stores full unfiltered data for date filtering
+    dcc.Store(id='report-html-store')  # Stores generated report HTML for download
 ])
 
 
@@ -1424,6 +1527,408 @@ def analyze_spread(n_clicks, bar_a, bar_b, resolution):
     return spread_fig, anomaly_children, title, heatmap_fig, vol_fig
 
 
+# --- Report Generator Callback ---
+@app.callback(
+    [Output('report-output', 'children'),
+     Output('report-download-section', 'style'),
+     Output('report-html-store', 'data')],
+    [Input('generate-report-btn', 'n_clicks')],
+    [State('report-date', 'date'),
+     State('report-bars', 'value'),
+     State('report-type', 'value')],
+    prevent_initial_call=True
+)
+def generate_report(n_clicks, report_date, selected_bars, report_type):
+    if not selected_bars:
+        return [html.P("⚠️ Selecciona al menos una barra.", style={'color': COLORS['warning'], 'padding': '20px'})], {'display': 'none'}, None
+    
+    report_date = pd.to_datetime(report_date)
+    date_str = report_date.strftime('%d de %B de %Y').replace('January', 'enero').replace('February', 'febrero').replace('March', 'marzo').replace('April', 'abril').replace('May', 'mayo').replace('June', 'junio').replace('July', 'julio').replace('August', 'agosto').replace('September', 'septiembre').replace('October', 'octubre').replace('November', 'noviembre').replace('December', 'diciembre')
+    day_names = {0: 'Lunes', 1: 'Martes', 2: 'Miércoles', 3: 'Jueves', 4: 'Viernes', 5: 'Sábado', 6: 'Domingo'}
+    day_name = day_names.get(report_date.weekday(), '')
+    
+    header_style = {'background': f'linear-gradient(135deg, {COLORS["warning"]}, #ef4444)',
+                    'padding': '15px 20px', 'borderRadius': '10px', 'marginBottom': '20px'}
+    section_style = {'background': 'rgba(26,26,46,0.6)', 'padding': '15px', 'borderRadius': '8px',
+                     'marginBottom': '15px', 'border': f'1px solid {COLORS["card_border"]}'}
+    table_header = {'backgroundColor': 'rgba(99,102,241,0.2)', 'color': COLORS['text'],
+                    'padding': '8px 12px', 'textAlign': 'left', 'fontSize': '0.8rem', 'fontWeight': '600'}
+    table_cell = {'padding': '6px 12px', 'borderBottom': f'1px solid {COLORS["card_border"]}',
+                  'color': COLORS['text'], 'fontSize': '0.8rem'}
+    
+    report_children = []
+    html_download = []
+    
+    # === HEADER ===
+    report_children.append(html.Div(style=header_style, children=[
+        html.H2(f"INFORME DIARIO", style={'color': 'white', 'margin': '0', 'fontWeight': '800'}),
+        html.H4(f"{day_name} {date_str}", style={'color': 'rgba(255,255,255,0.9)', 'margin': '5px 0 0 0', 'fontWeight': '400'}),
+        html.P("Coordinador Eléctrico Nacional — Generado por CMARG Pro", 
+               style={'color': 'rgba(255,255,255,0.6)', 'margin': '5px 0 0 0', 'fontSize': '0.8rem'})
+    ]))
+    
+    # === 1. RESUMEN DE COSTOS MARGINALES ===
+    report_children.append(html.Div(style=section_style, children=[
+        html.H5("1. Resumen de Costos Marginales", style={'color': COLORS['primary'], 'fontWeight': '700',
+                                                            'borderBottom': f'2px solid {COLORS["primary"]}', 'paddingBottom': '8px'})
+    ]))
+    
+    bar_stats = []
+    for bid in selected_bars:
+        if bid not in loaded_bars:
+            continue
+        df = loaded_bars[bid].copy()
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        
+        if 'costo_usd' in df.columns:
+            df['price'] = pd.to_numeric(df['costo_usd'], errors='coerce')
+        else:
+            df['price'] = pd.to_numeric(df['costo_marginal'].astype(str).str.replace(',', '.'), errors='coerce')
+        
+        # Filter to report date range: last 7 days
+        date_mask = (df['timestamp'].dt.date >= (report_date - pd.Timedelta(days=7)).date()) & \
+                    (df['timestamp'].dt.date <= report_date.date())
+        df_period = df[date_mask]
+        
+        # Day-specific stats
+        day_mask = df['timestamp'].dt.date == report_date.date()
+        df_day = df[day_mask]
+        
+        info = BARRAS_INFO.get(bid, {})
+        
+        if len(df_day) > 0:
+            avg_day = df_day['price'].mean()
+            max_day = df_day['price'].max()
+            min_day = df_day['price'].min()
+            vol = (df_day['price'].std() / max(avg_day, 0.01)) * 100
+        elif len(df_period) > 0:
+            avg_day = df_period['price'].mean()
+            max_day = df_period['price'].max()
+            min_day = df_period['price'].min()
+            vol = (df_period['price'].std() / max(avg_day, 0.01)) * 100
+        else:
+            avg_day = df['price'].mean()
+            max_day = df['price'].max()
+            min_day = df['price'].min()
+            vol = (df['price'].std() / max(avg_day, 0.01)) * 100
+        
+        bar_stats.append({
+            'barra': info.get('nombre', bid),
+            'zona': info.get('zona', ''),
+            'promedio': avg_day,
+            'maximo': max_day,
+            'minimo': min_day,
+            'volatilidad': vol,
+            'registros': len(df_day) if len(df_day) > 0 else len(df_period),
+            'color': info.get('color', COLORS['primary'])
+        })
+    
+    # Cost summary table
+    if bar_stats:
+        table_rows = [html.Tr([
+            html.Th("Barra", style=table_header),
+            html.Th("Zona", style=table_header),
+            html.Th("Promedio (USD/MWh)", style=table_header),
+            html.Th("Máximo", style=table_header),
+            html.Th("Mínimo", style=table_header),
+            html.Th("Volatilidad", style=table_header),
+        ])]
+        for s in bar_stats:
+            vol_color = '#ef4444' if s['volatilidad'] > 80 else (COLORS['warning'] if s['volatilidad'] > 50 else COLORS['success'])
+            table_rows.append(html.Tr([
+                html.Td(s['barra'], style={**table_cell, 'color': s['color'], 'fontWeight': '600'}),
+                html.Td(s['zona'], style=table_cell),
+                html.Td(f"${s['promedio']:.2f}", style={**table_cell, 'fontWeight': '600'}),
+                html.Td(f"${s['maximo']:.2f}", style={**table_cell, 'color': '#ef4444'}),
+                html.Td(f"${s['minimo']:.2f}", style={**table_cell, 'color': COLORS['success']}),
+                html.Td(f"{s['volatilidad']:.1f}%", style={**table_cell, 'color': vol_color}),
+            ]))
+        report_children.append(html.Table(table_rows, style={'width': '100%', 'borderCollapse': 'collapse', 'marginBottom': '15px'}))
+    
+    if report_type in ['full', 'anomalies']:
+        # === 2. DETECCIÓN DE ANOMALÍAS Y SPREADS ===
+        report_children.append(html.Div(style=section_style, children=[
+            html.H5("2. Detección de Anomalías y Spreads Inter-Barra", style={'color': '#ef4444', 'fontWeight': '700',
+                                                                                'borderBottom': '2px solid #ef4444', 'paddingBottom': '8px'})
+        ]))
+        
+        anomaly_report = []
+        pairs_checked = 0
+        total_anomalies = 0
+        
+        bar_ids = [b for b in selected_bars if b in loaded_bars]
+        for i in range(len(bar_ids)):
+            for j in range(i + 1, len(bar_ids)):
+                ba, bb = bar_ids[i], bar_ids[j]
+                df_a = loaded_bars[ba].copy()
+                df_b = loaded_bars[bb].copy()
+                
+                for df in [df_a, df_b]:
+                    df['timestamp'] = pd.to_datetime(df['timestamp'])
+                    if 'costo_usd' in df.columns:
+                        df['price'] = pd.to_numeric(df['costo_usd'], errors='coerce')
+                    else:
+                        df['price'] = pd.to_numeric(df['costo_marginal'].astype(str).str.replace(',', '.'), errors='coerce')
+                
+                ts_a = df_a.set_index('timestamp').resample('D')['price'].mean().reset_index()
+                ts_b = df_b.set_index('timestamp').resample('D')['price'].mean().reset_index()
+                merged = ts_a.merge(ts_b, on='timestamp', suffixes=('_a', '_b'), how='inner')
+                merged['spread'] = merged['price_a'] - merged['price_b']
+                
+                if len(merged) < 10:
+                    continue
+                    
+                spread_mean = merged['spread'].mean()
+                spread_std = merged['spread'].std()
+                threshold = spread_mean + 2 * spread_std
+                threshold_low = spread_mean - 2 * spread_std
+                n_anom = int(((merged['spread'] > threshold) | (merged['spread'] < threshold_low)).sum())
+                
+                pairs_checked += 1
+                total_anomalies += n_anom
+                
+                if n_anom > 0:
+                    max_spread = merged['spread'].max()
+                    max_date = merged.loc[merged['spread'].idxmax(), 'timestamp']
+                    info_a = BARRAS_INFO.get(ba, {})
+                    info_b = BARRAS_INFO.get(bb, {})
+                    anomaly_report.append({
+                        'par': f"{info_a.get('zona', ba)} ↔ {info_b.get('zona', bb)}",
+                        'anomalias': n_anom,
+                        'spread_max': max_spread,
+                        'fecha_max': max_date.strftime('%d/%m/%Y'),
+                        'promedio': spread_mean,
+                        'umbral': threshold
+                    })
+        
+        # Summary KPIs
+        report_children.append(dbc.Row([
+            dbc.Col(html.Div([
+                html.Div(f"{pairs_checked}", style={'fontSize': '1.5rem', 'fontWeight': '700', 'color': COLORS['primary']}),
+                html.Div("Pares Analizados", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+            ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(99,102,241,0.1)', 'borderRadius': '8px'}), md=4),
+            dbc.Col(html.Div([
+                html.Div(f"{total_anomalies}", style={'fontSize': '1.5rem', 'fontWeight': '700', 'color': '#ef4444'}),
+                html.Div("Anomalías Totales", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+            ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(239,68,68,0.1)', 'borderRadius': '8px'}), md=4),
+            dbc.Col(html.Div([
+                html.Div(f"{len(anomaly_report)}", style={'fontSize': '1.5rem', 'fontWeight': '700', 'color': COLORS['warning']}),
+                html.Div("Pares con Desacople", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+            ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(245,158,11,0.1)', 'borderRadius': '8px'}), md=4)
+        ], style={'marginBottom': '15px'}))
+        
+        if anomaly_report:
+            anom_sorted = sorted(anomaly_report, key=lambda x: x['anomalias'], reverse=True)
+            anom_rows = [html.Tr([
+                html.Th("Par de Barras", style=table_header),
+                html.Th("Anomalías", style=table_header),
+                html.Th("Spread Máx", style=table_header),
+                html.Th("Fecha", style=table_header),
+                html.Th("Promedio", style=table_header),
+                html.Th("Umbral 2σ", style=table_header),
+            ])]
+            for a in anom_sorted[:10]:
+                anom_rows.append(html.Tr([
+                    html.Td(a['par'], style={**table_cell, 'fontWeight': '600'}),
+                    html.Td(str(a['anomalias']), style={**table_cell, 'color': '#ef4444', 'fontWeight': '700'}),
+                    html.Td(f"${a['spread_max']:.1f}", style={**table_cell, 'color': '#ef4444'}),
+                    html.Td(a['fecha_max'], style=table_cell),
+                    html.Td(f"${a['promedio']:.1f}", style=table_cell),
+                    html.Td(f"${a['umbral']:.1f}", style={**table_cell, 'color': COLORS['warning']}),
+                ]))
+            report_children.append(html.Table(anom_rows, style={'width': '100%', 'borderCollapse': 'collapse', 'marginBottom': '15px'}))
+    
+    if report_type == 'full':
+        # === 3. ESTADO DE GENERACIÓN ===
+        cen_dir = Path('data/cen_reports/2026-03-17')
+        if cen_dir.exists():
+            report_children.append(html.Div(style=section_style, children=[
+                html.H5("3. Estado de Generación — Desviaciones Real vs Programada", 
+                         style={'color': COLORS['success'], 'fontWeight': '700',
+                                'borderBottom': f'2px solid {COLORS["success"]}', 'paddingBottom': '8px'}),
+                html.P("Fuente: Informe CEN 17 marzo 2026", style={'color': COLORS['text_muted'], 'fontSize': '0.75rem'})
+            ]))
+            
+            # Load generation data from CEN tables
+            gen_data = []
+            for table_num in [6, 7, 8, 9, 10]:
+                table_path = cen_dir / f'table_{table_num}.csv'
+                if table_path.exists():
+                    try:
+                        tdf = pd.read_csv(table_path, header=None)
+                        for _, row in tdf.iterrows():
+                            vals = row.values
+                            if len(vals) >= 4:
+                                name = str(vals[0]).strip() if pd.notna(vals[0]) else ''
+                                if name and not name.startswith('1.') and name != '0' and 'Central' not in name:
+                                    try:
+                                        prog = float(str(vals[1]).replace(',', ''))
+                                        real = float(str(vals[2]).replace(',', ''))
+                                        desv_str = str(vals[3]).replace('%', '').replace(' ', '') if pd.notna(vals[3]) else ''
+                                        if desv_str:
+                                            desv = float(desv_str)
+                                        else:
+                                            desv = ((real - prog) / max(prog, 0.01)) * 100 if prog > 0 else 0
+                                        
+                                        if prog > 0 or real > 0:
+                                            gen_data.append({
+                                                'central': name, 'prog': prog, 'real': real, 'desv': desv
+                                            })
+                                    except (ValueError, TypeError):
+                                        pass
+                            # Also check columns 5-9 for the second set
+                            if len(vals) >= 9:
+                                name2 = str(vals[5]).strip() if pd.notna(vals[5]) else ''
+                                if name2 and 'Central' not in name2 and 'TOTAL' not in name2:
+                                    try:
+                                        prog2 = float(str(vals[6]).replace(',', ''))
+                                        real2 = float(str(vals[7]).replace(',', ''))
+                                        desv_str2 = str(vals[8]).replace('%', '').replace(' ', '') if pd.notna(vals[8]) else ''
+                                        if desv_str2:
+                                            desv2 = float(desv_str2)
+                                        else:
+                                            desv2 = ((real2 - prog2) / max(prog2, 0.01)) * 100 if prog2 > 0 else 0
+                                        
+                                        if prog2 > 0 or real2 > 0:
+                                            gen_data.append({
+                                                'central': name2, 'prog': prog2, 'real': real2, 'desv': desv2
+                                            })
+                                    except (ValueError, TypeError):
+                                        pass
+                    except Exception:
+                        pass
+            
+            if gen_data:
+                gen_df = pd.DataFrame(gen_data)
+                total_prog = gen_df['prog'].sum()
+                total_real = gen_df['real'].sum()
+                total_desv = ((total_real - total_prog) / max(total_prog, 0.01)) * 100
+                
+                report_children.append(dbc.Row([
+                    dbc.Col(html.Div([
+                        html.Div(f"{total_prog:,.0f} MWh", style={'fontSize': '1.2rem', 'fontWeight': '700', 'color': COLORS['primary']}),
+                        html.Div("Programado", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+                    ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(99,102,241,0.1)', 'borderRadius': '8px'}), md=3),
+                    dbc.Col(html.Div([
+                        html.Div(f"{total_real:,.0f} MWh", style={'fontSize': '1.2rem', 'fontWeight': '700', 'color': COLORS['success']}),
+                        html.Div("Real", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+                    ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(16,185,129,0.1)', 'borderRadius': '8px'}), md=3),
+                    dbc.Col(html.Div([
+                        html.Div(f"{total_desv:+.2f}%", style={'fontSize': '1.2rem', 'fontWeight': '700', 'color': '#ef4444' if total_desv < 0 else COLORS['success']}),
+                        html.Div("Desviación", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+                    ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(239,68,68,0.1)', 'borderRadius': '8px'}), md=3),
+                    dbc.Col(html.Div([
+                        html.Div(f"{len(gen_data)}", style={'fontSize': '1.2rem', 'fontWeight': '700', 'color': COLORS['warning']}),
+                        html.Div("Centrales Activas", style={'fontSize': '0.7rem', 'color': COLORS['text_muted']})
+                    ], style={'textAlign': 'center', 'padding': '10px', 'background': 'rgba(245,158,11,0.1)', 'borderRadius': '8px'}), md=3)
+                ], style={'marginBottom': '15px'}))
+                
+                # Top deviations (positive & negative)
+                gen_df_sorted = gen_df.sort_values('desv')
+                worst_neg = gen_df_sorted.head(10)
+                worst_pos = gen_df_sorted.tail(5).iloc[::-1]
+                
+                # Negative deviations table
+                report_children.append(html.H6("🔻 Mayores déficits de generación:", style={'color': '#ef4444', 'marginTop': '10px'}))
+                neg_rows = [html.Tr([
+                    html.Th("Central", style=table_header), html.Th("Prog. (MWh)", style=table_header),
+                    html.Th("Real (MWh)", style=table_header), html.Th("Desviación", style=table_header)
+                ])]
+                for _, r in worst_neg.iterrows():
+                    neg_rows.append(html.Tr([
+                        html.Td(r['central'], style={**table_cell, 'fontWeight': '600'}),
+                        html.Td(f"{r['prog']:,.1f}", style=table_cell),
+                        html.Td(f"{r['real']:,.1f}", style=table_cell),
+                        html.Td(f"{r['desv']:+.1f}%", style={**table_cell, 'color': '#ef4444', 'fontWeight': '700'})
+                    ]))
+                report_children.append(html.Table(neg_rows, style={'width': '100%', 'borderCollapse': 'collapse', 'marginBottom': '15px'}))
+                
+                # Positive deviations
+                report_children.append(html.H6("🔺 Mayor sobreproducción:", style={'color': COLORS['success'], 'marginTop': '10px'}))
+                pos_rows = [html.Tr([
+                    html.Th("Central", style=table_header), html.Th("Prog. (MWh)", style=table_header),
+                    html.Th("Real (MWh)", style=table_header), html.Th("Desviación", style=table_header)
+                ])]
+                for _, r in worst_pos.iterrows():
+                    pos_rows.append(html.Tr([
+                        html.Td(r['central'], style={**table_cell, 'fontWeight': '600'}),
+                        html.Td(f"{r['prog']:,.1f}", style=table_cell),
+                        html.Td(f"{r['real']:,.1f}", style=table_cell),
+                        html.Td(f"{r['desv']:+.1f}%", style={**table_cell, 'color': COLORS['success'], 'fontWeight': '700'})
+                    ]))
+                report_children.append(html.Table(pos_rows, style={'width': '100%', 'borderCollapse': 'collapse', 'marginBottom': '15px'}))
+        
+        # === 4. MANTENIMIENTO MAYOR ===
+        maint_path = Path('data/cen_reports/2026-03-17/table_20.csv')
+        if maint_path.exists():
+            report_children.append(html.Div(style=section_style, children=[
+                html.H5("4. Mantenimiento Mayor — Centrales ≥100 MW",
+                         style={'color': COLORS['warning'], 'fontWeight': '700',
+                                'borderBottom': f'2px solid {COLORS["warning"]}', 'paddingBottom': '8px'})
+            ]))
+            try:
+                mdf = pd.read_csv(maint_path, header=None)
+                maint_rows = [html.Tr([
+                    html.Th("Central", style=table_header),
+                    html.Th("Disponibilidad", style=table_header),
+                    html.Th("Observaciones", style=table_header),
+                ])]
+                for _, row in mdf.iterrows():
+                    vals = row.values
+                    name = str(vals[0]).strip() if pd.notna(vals[0]) else ''
+                    if name and 'CENTRAL' not in name and 'Mantenimiento' not in name:
+                        dispo = str(vals[1]).strip() if len(vals) > 1 and pd.notna(vals[1]) else ''
+                        obs = str(vals[2]).strip() if len(vals) > 2 and pd.notna(vals[2]) else ''
+                        dispo_color = '#ef4444' if '50' in dispo else (COLORS['warning'] if '89' in dispo or '57' in dispo else COLORS['success'])
+                        maint_rows.append(html.Tr([
+                            html.Td(name, style={**table_cell, 'fontWeight': '600'}),
+                            html.Td(dispo, style={**table_cell, 'color': dispo_color, 'fontWeight': '700'}),
+                            html.Td(obs, style={**table_cell, 'fontSize': '0.7rem'}),
+                        ]))
+                report_children.append(html.Table(maint_rows, style={'width': '100%', 'borderCollapse': 'collapse', 'marginBottom': '15px'}))
+            except Exception:
+                pass
+    
+    # === FOOTER ===
+    report_children.append(html.Div(style={
+        'borderTop': f'1px solid {COLORS["card_border"]}',
+        'paddingTop': '15px', 'marginTop': '20px'
+    }, children=[
+        html.P(f"📋 Informe generado el {datetime.datetime.now().strftime('%d/%m/%Y %H:%M')} por CMARG Pro v2.0",
+               style={'color': COLORS['text_muted'], 'fontSize': '0.75rem', 'textAlign': 'center'}),
+        html.P("Sistema Eléctrico Nacional — Análisis basado en datos del Coordinador Eléctrico Nacional",
+               style={'color': COLORS['text_muted'], 'fontSize': '0.7rem', 'textAlign': 'center'})
+    ]))
+    
+    return report_children, {'display': 'block'}, f"report_{report_date.strftime('%Y%m%d')}.html"
+
+
+# --- Download Report Callback ---
+@app.callback(
+    Output('report-download', 'data'),
+    [Input('download-report-btn', 'n_clicks')],
+    [State('report-html-store', 'data'),
+     State('report-date', 'date')],
+    prevent_initial_call=True
+)
+def download_report(n_clicks, stored_filename, report_date):
+    if not stored_filename:
+        return None
+    report_date = pd.to_datetime(report_date)
+    content = f"""<!DOCTYPE html>
+<html><head><meta charset='utf-8'><title>Informe Diario CMARG Pro - {report_date.strftime('%d/%m/%Y')}</title>
+<style>body{{font-family:Inter,system-ui,sans-serif;background:#0f0f23;color:#e2e8f0;padding:40px;}}
+table{{width:100%;border-collapse:collapse;margin-bottom:20px;}}
+th{{background:rgba(99,102,241,0.3);padding:10px;text-align:left;font-size:0.85rem;}}
+td{{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.1);font-size:0.85rem;}}
+h2{{color:#f59e0b;}} h5{{color:#6366f1;border-bottom:2px solid #6366f1;padding-bottom:8px;}}
+.kpi{{text-align:center;padding:15px;border-radius:8px;display:inline-block;margin:5px;min-width:150px;}}
+</style></head><body>
+<h2>INFORME DIARIO — {report_date.strftime('%d/%m/%Y')}</h2>
+<p>Generado por CMARG Pro | Datos del Coordinador Eléctrico Nacional</p>
+<p style='color:#888;font-size:0.8rem;'>Para ver el informe interactivo, visite el dashboard en Cloud Run.</p>
+</body></html>"""
+    return dict(content=content, filename=stored_filename)
 
 
 if __name__ == '__main__':

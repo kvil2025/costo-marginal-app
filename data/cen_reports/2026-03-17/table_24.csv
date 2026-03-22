@@ -1,0 +1,54 @@
+0,1,2
+Hora,Centro de Control,Observación
+,,S/E Maitencillo barra de transferencia de 220 kV con solicitud de desconexión de curso forzoso. Causa informada: Mantenimiento correctivo a
+15:13,Transelec,
+,,"desconectador 89JT2-3 (revisión por apertura con carga), según SDCF 2026027877."
+,,S/E Solar Jama 89ET3-1 con informe de limitación. Causa informada: Desconectador solo puede ser maniobrado de forma local a pie de equipo debido a
+15:30,Enlasa,
+,,"que representa problemas de mecanismo, lo que actualmente impide su operación de forma remota, según IL 2026000661."
+15:35,GPE,C. Rio Colorado cancelada solicitud de desconexión de curso forzoso
+,,"C. San Isidro II con solicitud de intervención de curso forzoso, causa informada: Tunning con gas natural, carga TG sobre 200 MW, en ciclo combinado por"
+15:40,Enel Generación,
+,,"ajuste de modo de combustión, según SICF 2026027870"
+,,C. Machicura U-1 con solicitud de intervención de curso forzoso. Causa informada: Se realizará revisión de módulo D20A (tarjeta A1) en estación remota
+,,"EP3.1, debido a pérdida de datos en el SCADA y control de la Unidad, al visualizar en primera instancia se visualiza que el módulo no se encuentra"
+15:41,Colbún,
+,,"corriendo correctamente, por lo cual se realizará en primera instancia el reinicio del módulo o bien el reemplazo de este. Lo que implica perdida de datos al"
+,,SITR. Según SICF 2026027871.
+15:54,AES Andes,"S/E La Cebada Paño J4 cancelada solicitud de intervención de curso forzoso, según SICF 2026027661."
+15:55,Enel Generación,"C. San Isidro II cancelada solicitud de intervención de curso forzoso, según SICF 2026027870"
+15:59,AES Andes,C. Andes 2A inicia maniobras para inyectar al SADI.
+16:27,CGE - Transmisión,"Línea de 66 kV Villarrica - Pucón cancelada solicitud de intervención de curso forzoso, según SICF 2026027632."
+16:43,Celeoredes,"S/E Mulchén Paño J6 cancelado informe de limitación, según IL 2025002934."
+16:51,Colbún,"C. Machicura U-1 cancelada solicitud de intervención de curso forzoso, según SICF 2026027871."
+,,"S/E Curanilahue Norte 52B2 de línea de 66 kV Curanilahue Norte - Curanilahue interrupción forzada por protecciones, se pierden 19.7 MW de las SS/EE"
+17:02,CGE - Transmisión,"Curanilahue, Tres Pinos, Cañete y Lebu con 51071 clientes regulados afectados. Causa informada: S/E Tres Pinos paño 52CT1 de TR-1 de 66/13.2, 5.2 MVA"
+,,"se encuentra con falla, según IF 2026001709 - 2026001710."
+17:02,PE Lebu-Toro,C. PE Lebu indisponible. Causa informada: Falla línea de 66 kV Curanilahue Norte - Curanilahue.
+17:08,AES Andes,"S/E Alto Maipo interruptor H7 cancelada solicitud de intervención de curso forzoso, según SICF 2026027712."
+17:44,CGE - Transmisión,"Línea de 66 kV Curanilahue Norte - Tres Pinos cerrada y normalizado los consumos de SS/EE Cañete, Lebu y Tres Pinos."
+17:44,PE Lebu-Toro,C. PE Lebu disponible.
+,,S/E Curanilahue Norte cerrado 52B2 de línea de 66 kV Curanilahue Norte - Curanilahue y normalizado los consumos de S/E Curanilahue. Normalizada la
+18:20,CGE - Transmisión,
+,,topología. Cancelado IF2026001709
+,,"C. Embalse Ancoa limitada a 4.8 MW. Causa informada: Convenios suscritos y actualmente vigentes con regantes usuarios del embalse Ancoa, según IL"
+18:28,GPE,
+,,2026000660. cancelado IL 2026000633.
+18:30,CGE - Transmisión,"Línea de 66 kV Concepción - Mahns cancelada solicitud de intervención de curso forzoso, según SICF 2026027697."
+18:30,Cardones,"C. Yungay U-4 disponible y cancela solicitud de desconexión de curso forzoso, según SDCF 2026021775."
+18:32,AES Andes,C. Andes 2A inicia maniobras para inyectar al SEN.
+19:24,Transelec,"S/E Maitencillo ATR2 220/110 kV de 90 MVA cerrado, cancelado IF 2026001711."
+,,"S/E Maitencillo barra de transferencia de 220 kV cancelada solicitud de desconexión de curso forzoso, según SDCF 2026027877, como también cancelado IF"
+19:32,Transelec,
+,,2026001711.
+19:55,CGE - Transmisión,"S/E Las Compañías interruptor 52H1 con solicitud de intervención de curso forzoso. Causa informada: Relleno de gas SF6, según SICF 2026028288."
+20:01,CGE - Transmisión,"S/E Las Compañías H1 cancelada solicitud de intervención de curso forzoso, según SICF 2026028288."
+,,"S/E Las Rumpas H1 y H2 con solicitud de intervención de curso forzoso. Causa informada: A solicitud de Aguas Esperanza, relleno de gas SF6, según SICF"
+20:23,Transelec,
+,,2026028290.
+21:07,Colbún,"C. Santa María sin limitación, cancelada solicitud de intervención de curso forzoso, según SICF 2026027576."
+,,C. HP Llauquereo con solicitud de desconexión de curso forzoso. Causa informada: Desconexión de la central para realizar limpieza de embalse y
+23:05,Scotta,
+,,"bocatoma debido a acumulación de material que arrastra el río, según SDCF 2026028312."
+23:53,Scotta,"C. HP Llauquereo cancelada solicitud de desconexión de curso forzoso, según SDCF 2026028312."
+23:59,Enel Generación,C. Antuco cancelada solicitud de intervención de curso forzoso. Cancela SICF 2026026815.

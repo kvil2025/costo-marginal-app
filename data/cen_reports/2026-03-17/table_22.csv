@@ -1,0 +1,44 @@
+0,1,2
+CENTRAL (≥100 MW),Disponibilidad (%),Observaciones
+,,Limitación para prestar SSCC de CSF en AGC. Causa informada: Ciclo 1 con AGC indisponible en las siguientes configuraciones: - TG1A en
+TER Atacama 1 GNL,84.20 %,"ciclo abierto y TG1B+0,5TV1C en servicio al mismo tiempo. - TG1B en ciclo simple y TG1A+0,5TV1C en servicio al mismo tiempo, según IL"
+,,2025003062 y 2025003036.
+,,Limitada a prestar servicios complementarios de CPF. Causa informada: debido a que los ensayos de verificación de SSCC dan cuenta que
+TER Cochrane-CCH1,100.00 %,"la unidad no puede asegurar la adecuada entrega de CPF en modo ""Coordinado"" y ""Caldera sigue"" afectando la seguridad del SEN, acorde"
+,,"con lo descrito en la comunicación COC 0074-2022, según IL 2024000732."
+,,Limitada a prestar servicios complementarios de CPF. Causa informada: Debido a que los ensayos de verificación de SSCC dan cuenta que
+TER Cochrane-CCH2,100.00 %,"la unidad no puede asegurar la adecuada entrega de CPF en modo ""Coordinado"" y ""Caldera sigue"" afectando la seguridad del SEN, acorde"
+,,"con lo descrito en la comunicación COC 0085-2022, según IL 2025001353."
+,,Limitada. Para dar cumplimiento al DS13/2011 se actualizan los tiempos mínimos de operación en ciclaje persistente para las Unidades de
+TER Guacolda 1,87.00 %,"Central Guacolda. Unidad TER Guacolda U1, partida en frío (mayor a 48 horas F/S): 41 horas, partida en tibio (entre 8 y 48 horas F/S): 41"
+,,horas y partida en caliente (menor a 8 horas F/S): 21 horas. Según IL 2026000492.
+,,Limitada. Para dar cumplimiento al DS13/2011 se actualizan los tiempos mínimos de operación en ciclaje persistente para las Unidades de
+TER Guacolda 2,93.00 %,"Central Guacolda. Unidad TER Guacolda U2, partida en frío (mayor a 48 horas F/S): 27 horas, partida en tibio (entre 8 y 48 horas F/S): 27"
+,,horas y partida en caliente (menor a 8 horas F/S): 16 horas. Según IL 2026000493.
+,,"Limitada. Para dar cumplimiento al DS13/2011 se actualizan los tiempos mínimos de operación en ciclaje persistente de la unidad, partida en"
+TER Guacolda 3,100.00 %,"frío (mayor a 48 horas F/S): 179 horas, partida en tibio (entre 8 y 48 horas F/S): 141 horas y partida en caliente (menor a 8 horas F/S): 71"
+,,"horas, según IL 2026000497."
+,,Limitada. Para dar cumplimiento al DS13/2011 se actualizan los tiempos mínimos de operación en ciclaje persistente para las Unidades de
+TER Guacolda 4,0.00 %,"Central Guacolda. Unidad TER Guacolda U4, partida en frío (mayor a 48 horas F/S): 66 horas, partida en tibio (entre 8 y 48 horas F/S): 66"
+,,"horas y partida en caliente (menor a 8 horas F/S): 26 horas, según IL 2026000494."
+,,Limitada. Para dar cumplimiento al DS13/2011 se actualizan los tiempos mínimos de operación en ciclaje persistente para las Unidades de
+TER Guacolda 5,100.00 %,"Central Guacolda. Unidad TER Guacolda U5, partida en frío (mayor a 48 horas F/S): 42 horas, partida en tibio (entre 8 y 48 horas F/S): 42"
+,,"horas y partida en caliente (menor a 8 horas F/S): 32 horas, según IL 2026000495."
+,,TG1 y TG2 Las turbinas a gas están supeditadas al control operacional indicado por el fabricante del equipo General Electric. Dentro de esta
+TER Kelar Diésel,100.00 %,"información, se solicita que después del retiro, el virador debe estar en servicio 6 horas como mínimo para evitar vibraciones en el proceso"
+,,"de arranque siguiente, según IL 2024000778 - IL 2024000780."
+,,"Limitada para arrancar con diésel, motivos descritos en la carta GO Carta N°012-2023. Compresor de aire atomizador (CAA) queda con un"
+TER Nehuenco 9B Diésel,0.00 %,
+,,"bypass temporal, disponibilidad de la unidad solo con gas, según IL 2026000012."
+,,"Por cumplir límite CO acumulado mayor a 0.5 ton/día, de acuerdo con lo autorizado por la RCA, según Carta N°012-2023. Central se limita a 3"
+TER Nehuenco 9B Gas Arg,87.00 %,
+,,"horas en mínimo técnico por día, según IL 2026000011."
+,,Limitada para iniciar proceso de partida entre 22:00 hrs y las 05:00 hrs. Causa informada: Debido limites de ruido ambiental (comunidad
+TER Nueva Ventanas,100.00 %,
+,,"aledaña), según IL 2021002403."
+,,"Limitada a no generar con diesel. Causa informada: Restricción medio ambiental. Disponible con Gas, continuación del documento"
+TER Quintero 1A Diésel,0.00 %,
+,,"IL1035/2019, según IL 2020000259."
+,,"Limitada a no generar con diesel. Causa informada: Restricción medio ambiental. Disponible con Gas, continuación del documento"
+TER Quintero 1B Diésel,0.00 %,
+,,"IL1036/2019, según IL 2020000260."
