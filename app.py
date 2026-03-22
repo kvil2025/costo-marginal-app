@@ -1029,10 +1029,13 @@ def filter_by_date(start_date, end_date, btn_all, btn_2025, btn_2024, btn_2023,
     [State('stored-data', 'data'),
      State('prediction-years-slider', 'value'),
      State('model-selector', 'value'),
-     State('prediction-data', 'data')],
+     State('prediction-data', 'data'),
+     State('date-range-picker', 'start_date'),
+     State('date-range-picker', 'end_date')],
     prevent_initial_call=True
 )
-def generate_prediction(n_clicks, gdp_growth, stored_data, years_ahead, model_type, existing_prediction):
+def generate_prediction(n_clicks, gdp_growth, stored_data, years_ahead, model_type, existing_prediction,
+                        filter_start, filter_end):
     empty_result = (
         create_empty_figure("Sin datos"),
         create_empty_figure("Sin datos"),
@@ -1050,6 +1053,20 @@ def generate_prediction(n_clicks, gdp_growth, stored_data, years_ahead, model_ty
     
     # Recuperar datos
     df = pd.read_json(stored_data, orient='split')
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    
+    # === FILTRAR POR RANGO DE FECHAS SI ESTÁ ACTIVO ===
+    filter_label = ""
+    if filter_start and filter_end:
+        fs = pd.to_datetime(filter_start)
+        fe = pd.to_datetime(filter_end) + pd.Timedelta(days=1)
+        mask = (df['timestamp'] >= fs) & (df['timestamp'] <= fe)
+        df_filtered = df[mask].copy()
+        if len(df_filtered) >= 30:  # Need minimum data points for training
+            df = df_filtered
+            filter_label = f" | Datos: {fs.strftime('%d/%m/%Y')} → {fe.strftime('%d/%m/%Y')} ({len(df):,} registros)"
+        else:
+            filter_label = f" | Rango muy corto ({len(df_filtered)} pts), usando todos los datos"
     
     # Crear instancia del predictor
     model_names = {'prophet': 'Prophet', 'arima': 'ARIMA', 'xgboost': 'XGBoost', 'xgboost_v2': 'XGBoost V2'}
@@ -1276,8 +1293,8 @@ def generate_prediction(n_clicks, gdp_growth, stored_data, years_ahead, model_ty
     
     gdp_label = f" | PIB +{gdp_growth_pct}%" if gdp_growth_pct > 0 else ""
     avg_val = avg_adjusted if gdp_growth_pct > 0 else metrics.get('avg_predicted_value', 0)
-    message = f"🔮 {model_names[model_type]}: {metrics.get('prediction_start', '')} → {metrics.get('prediction_end', '')} ({years_ahead} años){gdp_label} | Promedio: ${avg_val:.1f}/MWh"
-    title = f"🔮 {model_names[model_type]} - Predicción a {years_ahead} Años{gdp_label}"
+    message = f"🔮 {model_names[model_type]}: {metrics.get('prediction_start', '')} → {metrics.get('prediction_end', '')} ({years_ahead} años){gdp_label}{filter_label} | Promedio: ${avg_val:.1f}/MWh"
+    title = f"🔮 {model_names[model_type]} - Predicción a {years_ahead} Años{gdp_label}{filter_label}"
     
     return pred_fig, fi_fig, season_fig, weekly_fig, message, title, metrics_div
 
