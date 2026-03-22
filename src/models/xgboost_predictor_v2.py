@@ -290,18 +290,11 @@ class XGBoostPredictorV2(BasePredictor):
         if not self.is_trained:
             return pd.DataFrame(), {'success': False, 'message': 'Modelo no entrenado'}
         
-        # Calcular horizonte: max 1 año si tiene exógenas, sino 3 meses
-        if years_ahead > 1:
-            if self.exogenous_data is not None:
-                days_ahead = min(years_ahead * 365, 365)  # Max 1 año
-                print(f"🔮 Horizonte ajustado a 1 año (máximo confiable con datos exógenos)")
-            else:
-                days_ahead = 90  # Solo 3 meses sin exógenas
-                print(f"🔮 Horizonte ajustado a 90 días (sin datos exógenos)")
-        else:
-            days_ahead = years_ahead * 365
-        
-        print(f"🔮 Generando predicción para {days_ahead} días...")
+        # Calcular horizonte de predicción
+        days_ahead = years_ahead * 365
+        print(f"🔮 Generando predicción para {years_ahead} años ({days_ahead} días)...")
+        if years_ahead > 3:
+            print(f"   ℹ️ Horizonte largo: los intervalos de confianza se amplían con el tiempo")
         
         # Generar fechas futuras
         future_dates = pd.date_range(
