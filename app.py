@@ -358,7 +358,11 @@ app.layout = dbc.Container(fluid=True, style={'backgroundColor': COLORS['backgro
                             marks={i: {'label': str(i), 'style': {'color': COLORS['text_muted']}} 
                                    for i in [1, 2, 3, 5, 7, 10]},
                             tooltip={'placement': 'bottom', 'always_visible': True}
-                        )
+                        ),
+                        html.Div(id='prediction-range-display', style={
+                            'marginTop': '6px', 'fontSize': '11px',
+                            'color': COLORS['text_muted'], 'fontFamily': 'monospace'
+                        })
                     ], md=4, style={'marginTop': '10px'}),
                     dbc.Col([
                         html.Label("📊 Escenario Crecimiento PIB Chile:", style={'color': COLORS['text'], 'marginRight': '10px'}),
@@ -1014,6 +1018,44 @@ def filter_by_date(start_date, end_date, btn_all, btn_2025, btn_2024, btn_2023,
             f"{years_f:.1f}", f"{records_f:,}", f"${avg_f:.1f}",
             f"${min_f:.1f}", f"${max_f:.1f}", f"{vol_f:.1f}%",
             summary, start_date, end_date)
+
+
+@app.callback(
+    Output('prediction-range-display', 'children'),
+    [Input('prediction-years-slider', 'value'),
+     Input('stored-data', 'data')]
+)
+def update_prediction_range_display(years_ahead, stored_data):
+    """Muestra el rango exacto de fechas que cubrirá la predicción."""
+    from datetime import date
+    import datetime
+    if not years_ahead:
+        return ""
+    # Determinar la fecha de inicio = último dato disponible
+    start = date.today()
+    if stored_data:
+        try:
+            df = pd.DataFrame(stored_data)
+            if 'timestamp' in df.columns:
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
+                start = df['timestamp'].max().date()
+        except Exception:
+            pass
+    end = start + datetime.timedelta(days=int(years_ahead) * 365)
+    
+    # Indicador de datos exógenos proyectados
+    has_macro = end.year <= 2035
+    macro_info = f" | 🌍 Macro proyectada hasta 2035 ✅" if has_macro else f" | ⚠️ Sin datos macro post-2035"
+    
+    # Detectar si cruza período El Niño o La Niña proyectado
+    enso_notes = []
+    if start.year <= 2030 and end.year >= 2028:
+        enso_notes.append("☀️ El Niño 2028-2030")
+    if start.year <= 2034 and end.year >= 2033:
+        enso_notes.append("🌧️ La Niña 2033-2034")
+    enso_str = f" | {', '.join(enso_notes)}" if enso_notes else ""
+    
+    return f"📅 {start.strftime('%d/%m/%Y')} → {end.strftime('%d/%m/%Y')} ({years_ahead} años){macro_info}{enso_str}"
 
 
 @app.callback(
