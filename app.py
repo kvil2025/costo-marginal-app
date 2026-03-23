@@ -3,6 +3,8 @@ CMARG Dashboard Pro - Análisis Predictivo de Costo Marginal
 Sistema Eléctrico Nacional de Chile
 10 Barras Troncales con Predicción IA (Prophet, ARIMA, XGBoost)
 """
+import os
+import json
 import dash
 from dash import dcc, html, Input, Output, State, callback_context
 import dash_bootstrap_components as dbc
@@ -14,6 +16,7 @@ from pathlib import Path
 import datetime
 import warnings
 warnings.filterwarnings('ignore')
+from flask import request, redirect, make_response, render_template, jsonify
 
 # Importar módulos propios
 from src.models.predictor import PricePredictor
@@ -125,6 +128,190 @@ app = dash.Dash(
     suppress_callback_exceptions=True
 )
 app.server.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+
+# --- Configuración Auth ---
+AUTH_ENABLED = os.environ.get('AUTH_ENABLED', 'true').lower() == 'true'
+server = app.server
+server.template_folder = os.path.join(os.path.dirname(__file__), 'templates')
+
+if AUTH_ENABLED:
+    try:
+        from src.auth import (
+            init_firebase, verify_firebase_token, create_or_update_user,
+            check_user_authorized, get_current_user, is_admin,
+            set_session_cookie, clear_session_cookie, get_session_token,
+            seed_admin, list_all_users, update_user_status, update_user_role,
+            delete_user, COOKIE_NAME
+        )
+        from src.admin import (
+            create_admin_layout, render_users_table, render_stats_cards
+        )
+        init_firebase()
+        seed_admin()  # Crear admin inicial: cristian.avila@geologgia.cl
+        print("🔐 Sistema de autenticación habilitado")
+    except Exception as e:
+        print(f"⚠️ Auth no disponible: {e}")
+        AUTH_ENABLED = False
+
+# --- Rutas de autenticación ---
+if AUTH_ENABLED:
+    @server.route('/login')
+    def login_page():
+        """Página de login con Google Sign-In."""
+        # Si ya tiene sesión válida, redirigir al dashboard
+        token = request.cookies.get(COOKIE_NAME)
+        if token:
+            user_info = verify_firebase_token(token)
+            if user_info:
+                authorized, _, _ = check_user_authorized(user_info['email'])
+                if authorized:
+                    return redirect('/')
+        return render_template('login.html')
+
+    @server.route('/auth/callback', methods=['POST'])
+    def auth_callback():
+        """Recibe el token de Firebase Auth y establece la sesión."""
+        data = request.get_json()
+        token = data.get('token')
+        
+        if not token:
+            return jsonify({'success': False, 'message': 'Token requerido'}), 400
+        
+        # Verificar token
+        user_info = verify_firebase_token(token)
+        if not user_info:
+            return jsonify({'success': False, 'message': 'Token inválido'}), 401
+        
+        # Crear o actualizar usuario en Firestore
+        user_data = create_or_update_user(user_info)
+        
+        # Verificar autorización
+        authorized, user_data, message = check_user_authorized(user_info['email'])
+        
+        if authorized:
+            response = make_response(jsonify({
+                'success': True,
+                'message': 'Acceso concedido',
+                'user': {
+                    'email': user_info['email'],
+                    'name': user_info.get('name', ''),
+                    'role': user_data.get('role', 'viewer')
+                }
+            }))
+            set_session_cookie(response, token)
+            return response
+        else:
+            pending = user_data and user_data.get('status') == 'pending'
+            return jsonify({
+                'success': False,
+                'pending': pending,
+                'message': message
+            }), 403
+
+    @server.route('/auth/check')
+    def auth_check():
+        """Verifica si hay una sesión activa."""
+        user_info, user_data = get_current_user()
+        if user_info and user_data:
+            return jsonify({
+                'authenticated': True,
+                'email': user_info['email'],
+                'name': user_info.get('name', ''),
+                'role': user_data.get('role', 'viewer')
+            })
+        return jsonify({'authenticated': False})
+
+    @server.route('/auth/logout')
+    def auth_logout():
+        """Cierra la sesión."""
+        response = make_response(redirect('/login'))
+        clear_session_cookie(response)
+        return response
+
+    @server.route('/admin')
+    def admin_page():
+        """Redirige a la página de admin (integrada en Dash)."""
+        token = request.cookies.get(COOKIE_NAME)
+        if not token:
+            return redirect('/login')
+        user_info = verify_firebase_token(token)
+        if not user_info or not is_admin(user_info['email']):
+            return redirect('/')
+        return redirect('/admin-panel')
+
+    # --- Admin API endpoints ---
+    @server.route('/api/admin/users')
+    def api_admin_users():
+        """API: Lista todos los usuarios."""
+        token = request.cookies.get(COOKIE_NAME)
+        if not token:
+            return jsonify({'error': 'No autorizado'}), 401
+        user_info = verify_firebase_token(token)
+        if not user_info or not is_admin(user_info['email']):
+            return jsonify({'error': 'Acceso denegado'}), 403
+        users = list_all_users()
+        return jsonify({'users': users})
+
+    @server.route('/api/admin/user/status', methods=['POST'])
+    def api_admin_update_status():
+        """API: Actualizar status de usuario."""
+        token = request.cookies.get(COOKIE_NAME)
+        if not token:
+            return jsonify({'error': 'No autorizado'}), 401
+        user_info = verify_firebase_token(token)
+        if not user_info or not is_admin(user_info['email']):
+            return jsonify({'error': 'Acceso denegado'}), 403
+        data = request.get_json()
+        success = update_user_status(data['email'], data['status'])
+        return jsonify({'success': success})
+
+    @server.route('/api/admin/user/role', methods=['POST'])
+    def api_admin_update_role():
+        """API: Actualizar rol de usuario."""
+        token = request.cookies.get(COOKIE_NAME)
+        if not token:
+            return jsonify({'error': 'No autorizado'}), 401
+        user_info = verify_firebase_token(token)
+        if not user_info or not is_admin(user_info['email']):
+            return jsonify({'error': 'Acceso denegado'}), 403
+        data = request.get_json()
+        success = update_user_role(data['email'], data['role'])
+        return jsonify({'success': success})
+
+    # --- Middleware: verificar autenticación antes de cada request ---
+    @server.before_request
+    def check_auth():
+        """Middleware que verifica autenticación en todas las rutas excepto login y assets."""
+        # Rutas públicas (no requieren auth)
+        public_paths = ['/login', '/auth/', '/assets/', '/_dash-', '/_reload-hash', '/favicon.ico']
+        path = request.path
+        
+        if any(path.startswith(p) for p in public_paths):
+            return None
+        
+        # Verificar sesión
+        token = request.cookies.get(COOKIE_NAME)
+        if not token:
+            # Para requests AJAX de Dash, devolver 401
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+               request.content_type == 'application/json' or \
+               path.startswith('/_dash'):
+                return None  # Permitir Dash callbacks (la app maneja su estado)
+            return redirect('/login')
+        
+        user_info = verify_firebase_token(token)
+        if not user_info:
+            if path.startswith('/_dash'):
+                return None
+            response = make_response(redirect('/login'))
+            clear_session_cookie(response)
+            return response
+        
+        authorized, _, _ = check_user_authorized(user_info['email'])
+        if not authorized:
+            if path.startswith('/_dash'):
+                return None
+            return redirect('/login')
 
 # --- CSS personalizado ---
 app.index_string = '''
@@ -1991,9 +2178,12 @@ h2{{color:#f59e0b;}} h5{{color:#6366f1;border-bottom:2px solid #6366f1;padding-b
 
 
 if __name__ == '__main__':
-    import os
     port = int(os.environ.get('PORT', 8051))
     debug = os.environ.get('DASH_DEBUG', 'true').lower() == 'true'
+    auth_status = '🔐 Auth HABILITADO' if AUTH_ENABLED else '🔓 Auth DESHABILITADO'
+    print(f"{auth_status}")
     print(f"🚀 Dashboard disponible en: http://127.0.0.1:{port}")
+    if AUTH_ENABLED:
+        print(f"🔑 Login en: http://127.0.0.1:{port}/login")
     app.run(debug=debug, port=port, host='0.0.0.0')
 

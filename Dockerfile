@@ -7,6 +7,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     g++ \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (Docker layer caching)
@@ -16,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY app.py .
 COPY src/ ./src/
+COPY templates/ ./templates/
 COPY data/barras/ ./data/barras/
 COPY data/exogenous/ ./data/exogenous/
 COPY scripts/ ./scripts/
@@ -26,13 +28,14 @@ ENV PYTHONUNBUFFERED=1
 ENV USE_BIGQUERY=true
 ENV GCP_PROJECT_ID=geologgia-map
 ENV BQ_DATASET=cmarg
+ENV AUTH_ENABLED=true
 
 # Expose port
 EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
+    CMD curl -f http://localhost:8080/auth/check || exit 1
 
 # Run with gunicorn for production
 CMD exec gunicorn app:server \
@@ -43,3 +46,4 @@ CMD exec gunicorn app:server \
     --graceful-timeout 120 \
     --keep-alive 5 \
     --log-level info
+

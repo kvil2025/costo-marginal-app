@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMARG Pro — Iniciar Sesión</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: 0;
+        }
+
+        /* Login card */
+        .login-card {
+            position: relative;
+            z-index: 1;
+            width: 420px;
+            background: rgba(15, 20, 35, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 48px 40px;
+            backdrop-filter: blur(20px);
+            box-shadow: 
+                0 0 60px rgba(59, 130, 246, 0.08),
+                0 25px 50px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            right: -1px; bottom: -1px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), transparent 50%, rgba(16, 185, 129, 0.15));
+            z-index: -1;
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            -webkit-mask-composite: xor;
+            padding: 1px;
+        }
+
+        /* Logo */
+        .logo-container {
+            margin-bottom: 24px;
+        }
+
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .app-title {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .app-subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 4px;
+        }
+
+        /* Divider */
+        .divider {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.4), transparent);
+            margin: 28px auto;
+        }
+
+        /* Message */
+        .login-message {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        /* Google Sign-In button */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 14px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .google-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .google-btn:active {
+            transform: translateY(0);
+        }
+
+        .google-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Status messages */
+        .status-msg {
+            margin-top: 20px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .status-msg.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .status-msg.pending {
+            display: block;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+        }
+
+        .status-msg.success {
+            display: block;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+        }
+
+        .status-msg.loading {
+            display: block;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer-logo {
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #3b82f6, #10b981);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #60a5fa;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .login-card {
+                width: 90%;
+                padding: 36px 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+
+    <div class="login-card">
+        <div class="logo-container">
+            <div class="logo-icon">⚡</div>
+            <div class="app-title">CMARG Pro</div>
+            <div class="app-subtitle">Análisis Predictivo del SEN</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="login-message">
+            Acceso restringido a usuarios autorizados.<br>
+            Inicia sesión con tu cuenta de Google.
+        </p>
+
+        <button class="google-btn" id="googleSignInBtn" onclick="signInWithGoogle()">
+            <svg viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Iniciar sesión con Google
+        </button>
+
+        <div class="status-msg" id="statusMsg"></div>
+
+        <div class="footer">
+            <span>Plataforma desarrollada por</span>
+            <div class="footer-logo">TK</div>
+            <span>TECKNOLOGIA</span>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+    <script>
+        // Firebase config — mismo proyecto GCP
+        const firebaseConfig = {
+            apiKey: "AIzaSyBqz0kx4NJn-tE0F5K3QgjGfa04FaLygxo",
+            authDomain: "geologgia-map.firebaseapp.com",
+            projectId: "geologgia-map",
+            storageBucket: "geologgia-map.firebasestorage.app",
+            messagingSenderId: "527660744827",
+            appId: "1:527660744827:web:cmarg_pro_auth"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+
+        const statusMsg = document.getElementById('statusMsg');
+
+        function showStatus(type, message) {
+            statusMsg.className = 'status-msg ' + type;
+            statusMsg.innerHTML = message;
+        }
+
+        async function signInWithGoogle() {
+            try {
+                showStatus('loading', '<span class="spinner"></span> Conectando con Google...');
+                
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                
+                const result = await firebase.auth().signInWithPopup(provider);
+                const user = result.user;
+                
+                showStatus('loading', '<span class="spinner"></span> Verificando acceso...');
+                
+                // Obtener el ID token
+                const idToken = await user.getIdToken(true);
+                
+                // Enviar token al backend
+                const response = await fetch('/auth/callback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        token: idToken,
+                        email: user.email,
+                        name: user.displayName,
+                        picture: user.photoURL
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus('success', '✅ Acceso concedido. Redirigiendo...');
+                    setTimeout(() => { window.location.href = '/'; }, 1000);
+                } else if (data.pending) {
+                    showStatus('pending', '⏳ ' + data.message);
+                } else {
+                    showStatus('error', '❌ ' + data.message);
+                }
+                
+            } catch (error) {
+                console.error('Error en login:', error);
+                if (error.code === 'auth/popup-closed-by-user') {
+                    statusMsg.className = 'status-msg';
+                    statusMsg.style.display = 'none';
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    // Ignorar
+                } else {
+                    showStatus('error', '❌ Error: ' + error.message);
+                }
+            }
+        }
+
+        // Check si ya hay sesión activa
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                // Verificar si la cookie de sesión existe
+                const response = await fetch('/auth/check', { 
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+                const data = await response.json();
+                if (data.authenticated) {
+                    window.location.href = '/';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
